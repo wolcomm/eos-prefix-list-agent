@@ -1,0 +1,24 @@
+language: python
+python:
+- '2.7'
+matrix:
+  fast_finish: true
+before_install:
+- sudo apt-get -qq update
+install:
+- pip install -U pip
+- pip install -U setuptools
+- pip install tox-travis codecov
+script:
+- tox
+after_success:
+- codecov
+# deploy:
+#   provider: pypi
+#   distributions: sdist bdist_wheel
+#   user: benmaddison
+#   password:
+#     secure: ulq4or7hUKnruNJ+QAcK4mTadDnPCJ1M4kcxYGKVQ727RF6erusgSXXbEg4Q+UMZ6HyLGyEdfnfIhlueHjK/9QKhOnsFqGk0NQ5mQ/s9dfPqKRH987W4BahoQWVL+ITa4yRrEu+qUjywb6HWxWUfOnPdkkDHoD5dT+jiEL1cWbkoA9S4zEb+8qjoHHQeoTBkTjIxVaxTGIEF1I8yQWNprsmK0XHp0tPDG6b/0uRTVBnJcUpVHybDGxOw8JUKgbCJUS6BBtDu8S4s5eP9WEHdygQDHJYrAn4j1pU+cTU5RrOKSAmae0GArhGJemfwxJlEsN8gdmSxmIsfzc23RymYb43YJGHxCBWL2M7MF5OJkoY1MoqoHMhRHCqvxtkoYiDM7BP3IwstqawX9RF0ol1aj89eHLWD91qZZ5RSy4KMZz4gTB3f9Rv+MdOQimjM6LKvs+yvzCguQGtNKPjV2/9Go5zz0yv2+jDVDQJ8LcwYTtQnkK96LHCfcdOfV5q137zDVm6oXK0jwBghTmWkTwYQ01W6jm7eHQSeBchj9ppgXfozX/2WCooqbqbpXkLop/e9S3vRI1p6wqMJcSj6jZQwsoZ+5l7k0QYKBU1px+iZnLqVd0uL23F8GnNvfw3poHsjDJEPwZPW+/rktbNF2aMWT4kOhn1VOljl5w8ARzGQn4E=
+#   on:
+#     tags: true
+#     python: '2.7'

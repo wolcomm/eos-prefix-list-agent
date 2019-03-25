@@ -1,0 +1,4 @@
+pytest
+pytest-cov
+pylama
+flake8-import-order
