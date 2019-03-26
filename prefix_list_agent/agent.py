@@ -18,6 +18,7 @@ import datetime
 import filecmp
 import os
 import shutil
+import signal
 import tempfile
 
 import eossdk
@@ -289,11 +290,19 @@ class PrefixListAgent(PrefixListBase, eossdk.AgentHandler,
                     self.unwatch(conn, close=True)
             except Exception as e:
                 self.err(e)
+            for retry in range(3):
+                if process.is_alive():
+                    if retry:
+                        self.info("Sending {} SIGTERM".format(process_name))
+                        process.terminate()
+                    timeout = retry * 5 + 1
+                    self.info("Waiting {} seconds for {} (pid: {}) to join"
+                              .format(timeout, process_name, process.pid))
+                    process.join(timeout)
             if process.is_alive():
-                self.info("Killing {}: pid {}".format(process_name,
-                                                      process.pid))
-                process.terminate()
-                process.join()
+                self.notice("Timeout waiting for {}. Sending SIGKILL"
+                            .format(process_name))
+                os.kill(process.pid, signal.SIGKILL)
         self.info("Cleanup complete")
 
     def sleep(self):
