@@ -63,14 +63,6 @@ class PrefixListWorker(multiprocessing.Process, PrefixListBase):
             self.c_err.close()
             self.c_data.close()
 
-    def get_policies(self):
-        """Get the list of valid policy names from RPTK."""
-        url = "{}/policies".format(self.endpoint.rstrip("/"))
-        self.info("Getting policy data from {}".format(url))
-        policies = json.load(urllib2.urlopen(url))
-        self.debug("Got policies: {}".format(policies))
-        return policies
-
     def get_configured(self, policies):
         """Get the prefix-lists in running-config."""
         configured = {p: collections.defaultdict(dict) for p in policies}
@@ -126,6 +118,35 @@ class PrefixListWorker(multiprocessing.Process, PrefixListBase):
                     self.info(submsg)
         self.notice("Prefix-lists refreshed successfully")
 
+    def rptk_request(self, url_path):
+        """Perform a query against the RPTK endpoint."""
+        url = "{}/{}".format(self.endpoint.rstrip("/"),
+                             url_path.lstrip("/"))
+        self.debug("Querying RPTK endpoint at {}".format(url))
+        try:
+            resp = urllib2.urlopen(url)
+        except urllib2.HTTPError as e:
+            self.err("Request failed: {} {}".format(e.code, e.reason))
+            raise e
+        except urllib2.URLError as e:
+            self.err("Request failed: {}".format(e))
+        self.debug("Request successful: {}".format(resp.getcode()))
+        self.debug("Deserialising JSON response")
+        try:
+            result = json.load(resp)
+        except Exception as e:
+            self.err("Failed to deserialise response: {}".format(e))
+        self.debug("Successfully deserialised JSON")
+        return result
+
+    def get_policies(self):
+        """Get the list of valid policy names from RPTK."""
+        url_path = "/policies"
+        self.info("Trying to get policy data from {}".format(url_path))
+        policies = self.rptk_request(url_path)
+        self.debug("Got policies: {}".format(policies.keys()))
+        return policies
+
     def get_data(self, configured):
         """Get IRR data for the configured prefix-list objects."""
         data = dict()
@@ -153,17 +174,19 @@ class PrefixListWorker(multiprocessing.Process, PrefixListBase):
 
     def get_data_bulk(self, policy, objs):
         """Get IRR data in bulk."""
-        url = "{}/json/query?policy={}&".format(self.endpoint, policy) + \
-              "&".join(["objects={}".format(obj) for obj in objs])
-        self.debug("Trying to get data from {}".format(url))
-        result = json.load(urllib2.urlopen(url))
+        url_path = "/json/query?policy={}&".format(policy) + \
+                   "&".join(["objects={}".format(obj) for obj in objs])
+        self.info("Trying to get prefix data from {}".format(url_path))
+        result = self.rptk_request(url_path)
+        self.debug("Got prefix data")
         return result
 
     def get_data_obj(self, policy, obj):
         """Get IRR data for a single object."""
-        url = "{}/json/{}/{}".format(self.endpoint, obj, policy)
-        self.debug("Trying to get data from {}".format(url))
-        result = json.load(urllib2.urlopen(url))
+        url_path = "/json/{}/{}".format(obj, policy)
+        self.info("Trying to get prefix data from {}".format(url_path))
+        result = self.rptk_request(url_path)
+        self.debug("Got prefix data")
         return result
 
     def write_results(self, configured, data):
