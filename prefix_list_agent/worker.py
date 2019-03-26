@@ -113,13 +113,17 @@ class PrefixListWorker(multiprocessing.Process, PrefixListBase):
             self.info("Running eAPI command: {}".format(cmd))
             resp = self.eapi.run_show_cmd(cmd)
             if resp.success():
-                messages = json.loads(resp.responses()[0])["messages"]
+                try:
+                    messages = json.loads(resp.responses()[0])["messages"]
+                except KeyError:
+                    continue
             else:
                 raise RuntimeError("eAPI request failed: {} ({})"
                                    .format(resp.error_message(),
                                            resp.error_code()))
             for msg in messages:
-                self.info(msg)
+                for submsg in msg.replace("\nNum", " -").rstrip().split("\n"):
+                    self.info(submsg)
         self.notice("Prefix-lists refreshed successfully")
 
     def get_data(self, configured):
