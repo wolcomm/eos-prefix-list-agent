@@ -70,13 +70,7 @@ class PrefixListWorker(multiprocessing.Process, PrefixListBase):
                   .format(self.path_re.pattern))
         for afi, cmd in (("ipv4", "show ip prefix-list"),
                          ("ipv6", "show ipv6 prefix-list")):
-            resp = self.eapi.run_show_cmd(cmd)
-            if resp.success():
-                data = json.loads(resp.responses()[0])["ipPrefixLists"]
-            else:
-                raise RuntimeError("eAPI request failed: {} ({})"
-                                   .format(resp.error_message(),
-                                           resp.error_code()))
+            data = self.eapi_request(cmd, result_node="ipPrefixLists")
             self.debug("Got response: {}".format(data))
             for name, config in data.items():
                 try:
@@ -102,42 +96,12 @@ class PrefixListWorker(multiprocessing.Process, PrefixListBase):
         self.info("Refreshing source-based prefix-lists")
         for afi in ("ip", "ipv6"):
             cmd = "refresh {} prefix-list".format(afi)
-            self.info("Running eAPI command: {}".format(cmd))
-            resp = self.eapi.run_show_cmd(cmd)
-            if resp.success():
-                try:
-                    messages = json.loads(resp.responses()[0])["messages"]
-                except KeyError:
-                    continue
-            else:
-                raise RuntimeError("eAPI request failed: {} ({})"
-                                   .format(resp.error_message(),
-                                           resp.error_code()))
+            messages = self.eapi_request(cmd, result_node="messages",
+                                         allow_empty=True)
             for msg in messages:
                 for submsg in msg.replace("\nNum", " -").rstrip().split("\n"):
                     self.info(submsg)
         self.notice("Prefix-lists refreshed successfully")
-
-    def rptk_request(self, url_path):
-        """Perform a query against the RPTK endpoint."""
-        url = "{}/{}".format(self.endpoint.rstrip("/"),
-                             url_path.lstrip("/"))
-        self.debug("Querying RPTK endpoint at {}".format(url))
-        try:
-            resp = urllib2.urlopen(url)
-        except urllib2.HTTPError as e:
-            self.err("Request failed: {} {}".format(e.code, e.reason))
-            raise e
-        except urllib2.URLError as e:
-            self.err("Request failed: {}".format(e))
-        self.debug("Request successful: {}".format(resp.getcode()))
-        self.debug("Deserialising JSON response")
-        try:
-            result = json.load(resp)
-        except Exception as e:
-            self.err("Failed to deserialise response: {}".format(e))
-        self.debug("Successfully deserialised JSON")
-        return result
 
     def get_policies(self):
         """Get the list of valid policy names from RPTK."""
@@ -245,6 +209,70 @@ class PrefixListWorker(multiprocessing.Process, PrefixListBase):
         default = {"ipv4": "0.0.0.0/0 le 32", "ipv6": "::/0 le 128"}
         line = "seq 1 deny {}\n".format(default[afi])
         return line
+
+    def eapi_request(self, cmd, result_node, allow_empty=False):
+        """Get call an enable-mode eAPI command."""
+        self.debug("Calling eAPI command {}".format(cmd))
+        try:
+            resp = self.eapi.run_show_cmd(cmd)
+        except Exception as e:
+            self.err("eAPI request failed: {}".format(e))
+            raise e
+        if resp.success():
+            data = self.json_load(resp.responses()[0])
+        else:
+            e = RuntimeError("eAPI request failed: {} ({})"
+                             .format(resp.error_message(),
+                                     resp.error_code()))
+            self.err(e)
+            raise e
+        try:
+            result = data[result_node]
+        except KeyError as e:
+            if allow_empty:
+                result = {}
+            else:
+                self.err("Failed to get result data: {}".format(e))
+        self.debug("eAPI request successful")
+        return result
+
+    def rptk_request(self, url_path):
+        """Perform a query against the RPTK endpoint."""
+        url = "{}/{}".format(self.endpoint.rstrip("/"),
+                             url_path.lstrip("/"))
+        self.debug("Querying RPTK endpoint at {}".format(url))
+        try:
+            resp = urllib2.urlopen(url)
+        except urllib2.HTTPError as e:
+            self.err("Request failed: {} {}".format(e.code, e.reason))
+            raise e
+        except urllib2.URLError as e:
+            self.err("Request failed: {}".format(e))
+        self.debug("Request successful: {}".format(resp.getcode()))
+        result = self.json_load(resp)
+        return result
+
+    def json_load(self, obj):
+        """Deserialise JSON from a string or file-like object."""
+        def fail(e):
+            self.err("Failed to deserialise response: {}".format(e))
+            raise e
+
+        self.debug("Deserialising JSON response")
+        try:
+            self.debug("Trying 'json.load' method")
+            result = json.load(obj)
+        except AttributeError:
+            self.debug("Object has no 'read' method")
+            self.debug("Trying 'json.loads' method")
+            try:
+                result = json.loads(obj)
+            except Exception as e:
+                fail(e)
+        except Exception as e:
+            fail(e)
+        self.debug("Successfully deserialised JSON")
+        return result
 
     @property
     def data(self):
