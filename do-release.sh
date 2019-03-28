@@ -91,4 +91,8 @@ CMD="hub release create ${PRE:+-p} -F - ${VERSION}"
 echo "Running: ${CMD}" && echo -e "${RELEASE_MSG}" | ${CMD} && echo "Done" ||
     error "Failed to create release"
 
+# Pull the newly created tag
+echo "Pulling new tags" && git pull --tags ||
+    error "Failed to pull new tags"
+
 exit 0
