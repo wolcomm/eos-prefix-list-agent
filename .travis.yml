@@ -1,24 +1,43 @@
+dist: xenial
 language: python
 python:
 - '2.7'
+services:
+- docker
+env:
+  global:
+  - AZURE_ACR_URI="workonline.azurecr.io"
+  - AZURE_ACR_APPID="af2eee6a-42e7-4826-920d-a6beab815473"
+  # AZURE_ACR_PASSWD=
+  - secure: X553Cr77GWQxG6wkdS4kSaVi1Sa/72SI7EDetbvj+8vt6uw+ou3pMFVUT6yVCORyrvQ1AOd7dI/rfsnwddJsor5pwmZJ1ZdTpqcUFYFeVG2xucltgHlxiEJAYcGvgmeQeuOrzWWx/XjWE8bz2Rv0K/AuHn4xPvL9vuqPaWHm1UjLU+C1Cby72JragRPptdSz4oXE3NMWhNAqL4qN2NH4bKWwODBbgmsf+Dag+taXkqyxoSlhS7D0KC8bZDnzXqKTXigH5kHQPNkBjGScZiHgTRqcqMLgUbMlK2xOZJ9Hdz3tA8C8WbYW2rmHWLM0t4y1+8ol05Rnyx/8YRojT4/sqhgHnF46YKCEW7QvBh5oGg77XldrC4StukEwKxr/xVXDdSLKEYZ9vJXwAxoqdjTGgyl+CE2Zl48Ezsca7oMDxqeLXEHqqA8DIapL0mcNI44HAqSCI8FflIepidIgWaeFMiBnxn34Y1koigm2A3YMavNpK5sPJ3EiHTpizOmPOuMhZnNGD+8rwJ9PUsoxD0ipNLgbmfhztOzh0qmMcAkJCcdKB54avbAvMnVqmIGH7GXy7tRVVdPYYGNvKiPyOKtD1f9bsPrXM//Z/D/7JmpTNKsC3tsaXYHYFe6rz/X0ar/ST0vJcj4FPHPINDjGVDcRGSKZv3NuLERm2snSY3Mh0l4=
+  matrix:
+  - CEOS_VERSION="4.21.0F"
+  - CEOS_VERSION="4.21.2F"
 matrix:
   fast_finish: true
 before_install:
 - sudo apt-get -qq update
-install:
 - pip install -U pip
 - pip install -U setuptools
-- pip install tox-travis codecov
+- pip install codecov
+- docker login --username "${AZURE_ACR_APPID}" --password "${AZURE_ACR_PASSWD}" "${AZURE_ACR_URI}"
+install:
+- IMAGE_ID="$(docker build --build-arg REGISTRY="${AZURE_ACR_URI}" --build-arg VERSION="${CEOS_VERSION}" --quiet .)"
+- CONTAINER_ID="$(docker run --detatch --privileged --rm "${IMAGE_ID}")"
 script:
-- tox
+- docker exec --interactive --tty "${CONTAINER_ID}" pytest
 after_success:
+- docker cp "${CONTAINER_ID}:/root/coverage.xml" "./"
 - codecov
-# deploy:
-#   provider: pypi
-#   distributions: sdist bdist_wheel
-#   user: benmaddison
-#   password:
-#     secure: ulq4or7hUKnruNJ+QAcK4mTadDnPCJ1M4kcxYGKVQ727RF6erusgSXXbEg4Q+UMZ6HyLGyEdfnfIhlueHjK/9QKhOnsFqGk0NQ5mQ/s9dfPqKRH987W4BahoQWVL+ITa4yRrEu+qUjywb6HWxWUfOnPdkkDHoD5dT+jiEL1cWbkoA9S4zEb+8qjoHHQeoTBkTjIxVaxTGIEF1I8yQWNprsmK0XHp0tPDG6b/0uRTVBnJcUpVHybDGxOw8JUKgbCJUS6BBtDu8S4s5eP9WEHdygQDHJYrAn4j1pU+cTU5RrOKSAmae0GArhGJemfwxJlEsN8gdmSxmIsfzc23RymYb43YJGHxCBWL2M7MF5OJkoY1MoqoHMhRHCqvxtkoYiDM7BP3IwstqawX9RF0ol1aj89eHLWD91qZZ5RSy4KMZz4gTB3f9Rv+MdOQimjM6LKvs+yvzCguQGtNKPjV2/9Go5zz0yv2+jDVDQJ8LcwYTtQnkK96LHCfcdOfV5q137zDVm6oXK0jwBghTmWkTwYQ01W6jm7eHQSeBchj9ppgXfozX/2WCooqbqbpXkLop/e9S3vRI1p6wqMJcSj6jZQwsoZ+5l7k0QYKBU1px+iZnLqVd0uL23F8GnNvfw3poHsjDJEPwZPW+/rktbNF2aMWT4kOhn1VOljl5w8ARzGQn4E=
-#   on:
-#     tags: true
-#     python: '2.7'
+deploy:
+  provider: pypi
+  distributions: sdist bdist_wheel
+  user: benmaddison
+  password:
+    secure: B7OR/gVGIJXrXedelZ2cGbENHOsqulshoLh8gPeMz11lFEgjMJSXU4/dECeFzlhvcksBd2eRydlQNfkN1ZGaoF6OOa7N/FZftKhOO8DlfSagq6/Vxo3ZUT8Pf4icpgQP3TbD85JVqq6Z4MZYmCCNKntiqkzT0jGSCL9nEKZeFC2RmL9gVN3FBtowZ5BX+7xLg33zgdAByGi6r5UmMlW38IepU6G1OJkqIZsa7YfMxvbi13CE0Wa6paZ1g5QqE/9LgRxvuLLzAV1M6IhjIgz95B9yMehQQalqXJxCBw5HuRVYlXfDxjPErwO1FhD++wwy0Ne8qIeo2regxlHnk2Mpp7NdM4y1FBC0ipW/c4guGmo4G32uvr1O/DaD53B/K2BEjmsel/gn/udmjYLp+zFIrpadzIZR9aWSDYn0jLv2V+rbEfXs/38BsNxAhUrhyE4cN6CpB2ojR7al+0AnoLjrKA4QVvlnryJ5go5FVguNmGsyzy1QOXYS6b9hCUoatr7JBBiNEiIke+usbPqbHWX/tmTklzOklxo0B7SrJja9re2b5ou8ZmPQY2Z2Y3cqMAg0P4H6kSgh2FnjzwPzVPpYxoCUgjQjTWVjmzkLeubdvvEzsmXEDup4bA0q7yB7pS9VnvMeKzFAH4xjeaTxZhly64adTjItU9t3xJztAVi9v74=
+  on:
+    tags: true
+    python: '2.7'
+after_script:
+- docker kill "${CONTAINER_ID}"
+- docker image rm "${IMAGE_ID}"
