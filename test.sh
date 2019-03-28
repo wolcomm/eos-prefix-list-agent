@@ -1,4 +1,4 @@
-VERSION="4.21.0F"
+VERSION="latest"
 REGISTRY="workonline.azurecr.io"
 
 ok() { echo "  [OK]"; }
