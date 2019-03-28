@@ -76,5 +76,5 @@ EOF
 CMD="hub release create ${PRE:+-p} -F - ${VERSION}"
 
 echo -e "${RELEASE_MSG}\n"
-# echo "Running: ${CMD}" && echo -e "${RELEASE_MSG}" | ${CMD} && echo "Done" ||
-#     error "Failed to create release"
+echo "Running: ${CMD}" && echo -e "${RELEASE_MSG}" | ${CMD} && echo "Done" ||
+    error "Failed to create release"
