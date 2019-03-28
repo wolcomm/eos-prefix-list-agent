@@ -29,6 +29,9 @@ error() { echo "$@" 1>&2; exit 1; }
 
 have() { command -v "$1" >/dev/null 2>&1; }
 
+# Check that we have hub installed
+have "hub" || error "'hub' is required for creating github releases."
+
 # Set VERSION
 if [[ $# -gt 1 ]]; then
     echo "Too many arguments provided"
@@ -43,18 +46,22 @@ fi
 if [[ "$VERSION" == "--help" || "$VERSION" == "-h" ]]; then
     usage; exit 0
 fi
+
+# Check whether this is a pre-release
 if [[ ! "$VERSION" =~ ^[0-9]+(\.[0-9]+)+$ ]]; then
     PRE="pre-"
 fi
 echo -e "Creating ${PRE}release\n"
 
-# Check that we have hub installed
-
-have "hub" || error "'hub' is required for creating github releases."
-
-PREVIOUS=$(hub release | sort -V | head -n 1) ||
+# Find the last release
+SELECT="$([[ -z "$PRE" ]] && echo -n "--exclude-prereleases")"
+PREVIOUS="$(hub release ${SELECT} | sort -V | head -n 1)" ||
     error "Getting previous release failed"
+if [[ "$VERSION" == "$PREVIOUS" ]]; then
+    error "Release ${VERSION} already exists"
+fi
 
+# Get the change log since the last release
 if [[ -n "$PREVIOUS" ]]; then
     SINCE=" since [${PREVIOUS}]($(hub browse --url)/releases/tag/${PREVIOUS}):" ||
         error "Getting repository URL failed"
@@ -62,9 +69,10 @@ if [[ -n "$PREVIOUS" ]]; then
 else
     LOG_RANGE="HEAD"
 fi
-
 CHANGE_LOG=$(git log ${LOG_RANGE} --oneline --no-color) ||
     error "Getting git log failed"
+
+# Create the release message
 RELEASE_MSG=$(cat <<EOF
 ${VERSION}
 
@@ -73,8 +81,11 @@ Changes${SINCE}:
 ${CHANGE_LOG}
 EOF
 )
-CMD="hub release create ${PRE:+-p} -F - ${VERSION}"
-
 echo -e "${RELEASE_MSG}\n"
+
+# Create the release
+CMD="hub release create ${PRE:+-p} -F - ${VERSION}"
 echo "Running: ${CMD}" && echo -e "${RELEASE_MSG}" | ${CMD} && echo "Done" ||
     error "Failed to create release"
+
+exit 0
