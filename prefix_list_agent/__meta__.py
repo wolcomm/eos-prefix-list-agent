@@ -15,7 +15,7 @@
 from __future__ import print_function
 from __future__ import unicode_literals
 
-__version__ = "0.1.0a3"
+__version__ = "0.1.0a4"
 __author__ = "Ben Maddison"
 __author_email__ = "benm@workonline.africa"
 __licence__ = "MIT"
