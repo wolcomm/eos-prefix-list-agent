@@ -7,9 +7,9 @@ services:
 env:
   global:
   - AZURE_ACR_URI="workonline.azurecr.io"
-  - AZURE_ACR_APPID="af2eee6a-42e7-4826-920d-a6beab815473"
+  - AZURE_ACR_APPID="99d33495-51d7-4c2e-bb15-70f33ba25587"
   # AZURE_ACR_PASSWD=
-  - secure: X553Cr77GWQxG6wkdS4kSaVi1Sa/72SI7EDetbvj+8vt6uw+ou3pMFVUT6yVCORyrvQ1AOd7dI/rfsnwddJsor5pwmZJ1ZdTpqcUFYFeVG2xucltgHlxiEJAYcGvgmeQeuOrzWWx/XjWE8bz2Rv0K/AuHn4xPvL9vuqPaWHm1UjLU+C1Cby72JragRPptdSz4oXE3NMWhNAqL4qN2NH4bKWwODBbgmsf+Dag+taXkqyxoSlhS7D0KC8bZDnzXqKTXigH5kHQPNkBjGScZiHgTRqcqMLgUbMlK2xOZJ9Hdz3tA8C8WbYW2rmHWLM0t4y1+8ol05Rnyx/8YRojT4/sqhgHnF46YKCEW7QvBh5oGg77XldrC4StukEwKxr/xVXDdSLKEYZ9vJXwAxoqdjTGgyl+CE2Zl48Ezsca7oMDxqeLXEHqqA8DIapL0mcNI44HAqSCI8FflIepidIgWaeFMiBnxn34Y1koigm2A3YMavNpK5sPJ3EiHTpizOmPOuMhZnNGD+8rwJ9PUsoxD0ipNLgbmfhztOzh0qmMcAkJCcdKB54avbAvMnVqmIGH7GXy7tRVVdPYYGNvKiPyOKtD1f9bsPrXM//Z/D/7JmpTNKsC3tsaXYHYFe6rz/X0ar/ST0vJcj4FPHPINDjGVDcRGSKZv3NuLERm2snSY3Mh0l4=
+  - secure: DgE0F2bj3fR3d2R0B5M4DdS1H7L1LoglO+EiO5LGuiqu75UKMLGqfSWZubddI/htk702KTDu46kp0olmIhGvSEAh3CkOZIM9oNjvW1YalMt/ydCG35zHA1gK70RcHQHtFICi0zusFbjorHIHrwXSWJo8AKqwabTvxP8F5N8qunGjQbj6PeM82h9n1oyQ8n7R6K1X4cAIRhzyidK74AKLYwujpbnV9vQDBx4rlAukRaXXFJgJQTeSWabfLDlIyqo9Wmb1PmpluiDEnz1BXZp0QjRnbdRh99ApuW3OH1Td0rCqveeEYn+ejHMKdEWZ+v+haT2shb5NT3CAI9d+nvJtDgdA1dHOYdVIPSMjw6Mn7Kzrdun3wc6kc9ViqHy5lWbg6bm8P9Va74Cc+sAyrSRMLG21lhcrzvkVa65NW/HiJYFwfnjLIxgWEtsgDzLLYN1AVMaZ7SsQHgDr59IZtVmCm/5BM0eBcSxqnrmUvit38xrcE5BaCWEzNFsUZAcZDRveAKKH511uRPz+9Pth+p66bmbIL+J08vSz8oEqeJXoPrKZImq6FTiOxKNu93nTkS6odtNJuumOp98vLX/8c0ni8R/0MdYIKNjTCLSWcMQ9s+scZBg664FkFpAZuAo19BxoXuzZdxkTFFwmw4818EZjtyPuXq5yoiDXPt2CsSj60LU=
   matrix:
   - CEOS_VERSION="4.21.0F"
   - CEOS_VERSION="4.21.2F"
@@ -17,7 +17,7 @@ matrix:
   fast_finish: true
 before_install:
 - sudo pip install --upgrade pip setuptools codecov
-- docker login --username "${AZURE_ACR_APPID}" --password "${AZURE_ACR_PASSWD}" "${AZURE_ACR_URI}"
+- echo -n "${AZURE_ACR_PASSWD}" | docker login --username "${AZURE_ACR_APPID}" --password-stdin "${AZURE_ACR_URI}"
 install:
 - IMAGE_ID="$(docker build --build-arg REGISTRY="${AZURE_ACR_URI}" --build-arg VERSION="${CEOS_VERSION}" --quiet .)"
 - CONTAINER_ID="$(docker run --detatch --privileged --rm "${IMAGE_ID}")"
