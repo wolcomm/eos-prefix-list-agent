@@ -37,15 +37,15 @@ deploy:
     tags: true
     python: '2.7'
     condition: "${CEOS_VERSION}" = "latest"
-- provider: releases
-  api_key:
-    secure: ehKR+Ze6T9ns7e+n5vfRNFFsl62Endugyda0eue9nWuW1LElTLO1JPEQySTXHuo5PkwG0aw+qbJMT6EN9lIJUPL0R9e3hw0CH0GhgR7wBM9d3itpF5Qcnd/wO0XX+kyh8pklu5J/qZ1fSfQGVPs6Qpn5Mx0bHcCHsl52i7xqM+3kyN7rzoTZkZC22obv5NO2SVlMcNquAcES38mFaz/eeV03XGRSL7w2X7mpwIilt3MEOYbDOLMv9Rk0cg/jSZZ6Dnc9vAaMaYtcFKuDqG7PmjDVgKiCd03Wz9aLg5aS37NFOJ/vA0L/v6cxMhkzOg1733wRZaSGQ7SG58z8Yrmk4+yD3dibKWzsshHEMHYQiIWSOBWG3sgTi8olzrnvLSEow69tzOXTs01bs0cjZuyX6ydT3x1NG20v1kBoHaxEWtGKDb5MNkg/69sb5Iz3huYeYcHfY+Tq5i6O+73k9H9NJjllwJ4IkOeBAeFgJHdfjWqtely2OcnRiKpnqUtUliCEkuzEln8SK71o1lKOgTy2r6804eWV9NZwLSyWm3E+SfEfpVnKCfLOe7rS7PtS0yAgicUcmGnYqeXoSlyj5o0i+KGZWTjJF/Jks5uimt+WmU2OLboi6eTvx0ramfq6gozSF+6r16zV2VVjUAE6YPGEkfI1+AUnlIrQUo1NtlsqddQ=
-  file_glob: true
-  file: dist/*
-  on:
-    tags: true
-    python: '2.7'
-    condition: "${CEOS_VERSION}" = "latest"
+# - provider: releases
+#   api_key:
+#     secure: ehKR+Ze6T9ns7e+n5vfRNFFsl62Endugyda0eue9nWuW1LElTLO1JPEQySTXHuo5PkwG0aw+qbJMT6EN9lIJUPL0R9e3hw0CH0GhgR7wBM9d3itpF5Qcnd/wO0XX+kyh8pklu5J/qZ1fSfQGVPs6Qpn5Mx0bHcCHsl52i7xqM+3kyN7rzoTZkZC22obv5NO2SVlMcNquAcES38mFaz/eeV03XGRSL7w2X7mpwIilt3MEOYbDOLMv9Rk0cg/jSZZ6Dnc9vAaMaYtcFKuDqG7PmjDVgKiCd03Wz9aLg5aS37NFOJ/vA0L/v6cxMhkzOg1733wRZaSGQ7SG58z8Yrmk4+yD3dibKWzsshHEMHYQiIWSOBWG3sgTi8olzrnvLSEow69tzOXTs01bs0cjZuyX6ydT3x1NG20v1kBoHaxEWtGKDb5MNkg/69sb5Iz3huYeYcHfY+Tq5i6O+73k9H9NJjllwJ4IkOeBAeFgJHdfjWqtely2OcnRiKpnqUtUliCEkuzEln8SK71o1lKOgTy2r6804eWV9NZwLSyWm3E+SfEfpVnKCfLOe7rS7PtS0yAgicUcmGnYqeXoSlyj5o0i+KGZWTjJF/Jks5uimt+WmU2OLboi6eTvx0ramfq6gozSF+6r16zV2VVjUAE6YPGEkfI1+AUnlIrQUo1NtlsqddQ=
+#   file_glob: true
+#   file: dist/*
+#   on:
+#     tags: true
+#     python: '2.7'
+#     condition: "${CEOS_VERSION}" = "latest"
 after_script:
 - docker kill "${CONTAINER_ID}"
 - docker image rm "${IMAGE_ID}"
