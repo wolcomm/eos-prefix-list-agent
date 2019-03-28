@@ -27,12 +27,17 @@ script:
 after_success:
 - docker cp "${CONTAINER_ID}:/root/coverage.xml" "./"
 - codecov -e CEOS_VERSION
+before_deploy:
+- sudo apt-get update
+- sudo apt-get install -y rpm
 deploy:
 - provider: pypi
   distributions: sdist bdist_wheel bdist_rpm
   user: benmaddison
   password:
     secure: B7OR/gVGIJXrXedelZ2cGbENHOsqulshoLh8gPeMz11lFEgjMJSXU4/dECeFzlhvcksBd2eRydlQNfkN1ZGaoF6OOa7N/FZftKhOO8DlfSagq6/Vxo3ZUT8Pf4icpgQP3TbD85JVqq6Z4MZYmCCNKntiqkzT0jGSCL9nEKZeFC2RmL9gVN3FBtowZ5BX+7xLg33zgdAByGi6r5UmMlW38IepU6G1OJkqIZsa7YfMxvbi13CE0Wa6paZ1g5QqE/9LgRxvuLLzAV1M6IhjIgz95B9yMehQQalqXJxCBw5HuRVYlXfDxjPErwO1FhD++wwy0Ne8qIeo2regxlHnk2Mpp7NdM4y1FBC0ipW/c4guGmo4G32uvr1O/DaD53B/K2BEjmsel/gn/udmjYLp+zFIrpadzIZR9aWSDYn0jLv2V+rbEfXs/38BsNxAhUrhyE4cN6CpB2ojR7al+0AnoLjrKA4QVvlnryJ5go5FVguNmGsyzy1QOXYS6b9hCUoatr7JBBiNEiIke+usbPqbHWX/tmTklzOklxo0B7SrJja9re2b5ou8ZmPQY2Z2Y3cqMAg0P4H6kSgh2FnjzwPzVPpYxoCUgjQjTWVjmzkLeubdvvEzsmXEDup4bA0q7yB7pS9VnvMeKzFAH4xjeaTxZhly64adTjItU9t3xJztAVi9v74=
+  skip_cleanup: true
+  skip_existing: true
   on:
     tags: true
     python: '2.7'
@@ -42,6 +47,8 @@ deploy:
     secure: ehKR+Ze6T9ns7e+n5vfRNFFsl62Endugyda0eue9nWuW1LElTLO1JPEQySTXHuo5PkwG0aw+qbJMT6EN9lIJUPL0R9e3hw0CH0GhgR7wBM9d3itpF5Qcnd/wO0XX+kyh8pklu5J/qZ1fSfQGVPs6Qpn5Mx0bHcCHsl52i7xqM+3kyN7rzoTZkZC22obv5NO2SVlMcNquAcES38mFaz/eeV03XGRSL7w2X7mpwIilt3MEOYbDOLMv9Rk0cg/jSZZ6Dnc9vAaMaYtcFKuDqG7PmjDVgKiCd03Wz9aLg5aS37NFOJ/vA0L/v6cxMhkzOg1733wRZaSGQ7SG58z8Yrmk4+yD3dibKWzsshHEMHYQiIWSOBWG3sgTi8olzrnvLSEow69tzOXTs01bs0cjZuyX6ydT3x1NG20v1kBoHaxEWtGKDb5MNkg/69sb5Iz3huYeYcHfY+Tq5i6O+73k9H9NJjllwJ4IkOeBAeFgJHdfjWqtely2OcnRiKpnqUtUliCEkuzEln8SK71o1lKOgTy2r6804eWV9NZwLSyWm3E+SfEfpVnKCfLOe7rS7PtS0yAgicUcmGnYqeXoSlyj5o0i+KGZWTjJF/Jks5uimt+WmU2OLboi6eTvx0ramfq6gozSF+6r16zV2VVjUAE6YPGEkfI1+AUnlIrQUo1NtlsqddQ=
   file_glob: true
   file: dist/*
+  skip_cleanup: true
+  skip_existing: true
   on:
     tags: true
     python: '2.7'
@@ -49,3 +56,5 @@ deploy:
 after_script:
 - docker kill "${CONTAINER_ID}"
 - docker image rm "${IMAGE_ID}"
+notifications:
+  email: false
