@@ -63,7 +63,7 @@ fi
 
 # Get the change log since the last release
 if [[ -n "$PREVIOUS" ]]; then
-    SINCE=" since [${PREVIOUS}]($(hub browse --url)/releases/tag/${PREVIOUS}):" ||
+    SINCE=" since [${PREVIOUS}]($(hub browse --url)/releases/tag/${PREVIOUS})" ||
         error "Getting repository URL failed"
     LOG_RANGE="${PREVIOUS}..HEAD"
 else
