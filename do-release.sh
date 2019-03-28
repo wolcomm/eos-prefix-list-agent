@@ -55,11 +55,14 @@ echo -e "Creating ${PRE}release\n"
 
 # Find the last release
 SELECT="$([[ -z "$PRE" ]] && echo -n "--exclude-prereleases")"
-PREVIOUS="$(hub release ${SELECT} | sort -V | head -n 1)" ||
+RELEASES="$(hub release ${SELECT} | sort -rV)" ||
     error "Getting previous release failed"
-if [[ "$VERSION" == "$PREVIOUS" ]]; then
-    error "Release ${VERSION} already exists"
-fi
+while read -r R; do
+    if [[ "$VERSION" == "$R" ]]; then
+        error "Release ${VERSION} already exists"
+    fi
+done <<< "${RELEASES}"
+PREVIOUS=$(echo -e "${RELEASES}" | head -n 1)
 
 # Get the change log since the last release
 if [[ -n "$PREVIOUS" ]]; then
