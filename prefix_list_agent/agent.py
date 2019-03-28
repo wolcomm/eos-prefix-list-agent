@@ -87,7 +87,7 @@ class PrefixListAgent(PrefixListBase, eossdk.AgentHandler,
     @rptk_endpoint.setter
     def rptk_endpoint(self, url):
         """Set 'rptk_endpoint' property."""
-        self.rptk_endpoint = url
+        self._rptk_endpoint = url
 
     @property
     def source_dir(self):
@@ -107,10 +107,7 @@ class PrefixListAgent(PrefixListBase, eossdk.AgentHandler,
     @refresh_interval.setter
     def refresh_interval(self, i):
         """Set 'refresh_interval' property."""
-        if i:
-            i = int(i)
-        else:
-            i = 10
+        i = int(i)
         if i in range(10, 86400):
             self._refresh_interval = i
         else:
