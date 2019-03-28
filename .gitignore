@@ -14,6 +14,7 @@ __pycache__/
 build/
 develop-eggs/
 dist/
+bdist_rpm/
 downloads/
 eggs/
 .eggs/
