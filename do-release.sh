@@ -20,7 +20,7 @@ Usage: ${0##*/} [VERSION]
     If no arguments are provided, VERSION will be read from STDIN.
 
     Example:
-        $ package/__meta__.py | ${0##*/}
+        $ package/__meta__.py | ./${0##*/}
 
 EOF
 }
