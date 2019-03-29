@@ -233,6 +233,7 @@ class PrefixListWorker(multiprocessing.Process, PrefixListBase):
                 result = {}
             else:
                 self.err("Failed to get result data: {}".format(e))
+                raise e
         self.debug("eAPI request successful")
         return result
 
