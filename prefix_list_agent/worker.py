@@ -172,7 +172,11 @@ class PrefixListWorker(multiprocessing.Process, PrefixListBase):
                     for afi, file in config.items():
                         path = os.path.join(policy_dir, file)
                         entries = data[policy][obj][afi]
-                        self.write_prefix_list(path, entries, afi)
+                        try:
+                            self.write_prefix_list(path, entries, afi)
+                        except Exception:
+                            stats["failed"] += 1
+                            continue
                         stats["succeeded"] += 1
                 else:
                     self.warning("No prefix data for {}/{}"
@@ -192,6 +196,7 @@ class PrefixListWorker(multiprocessing.Process, PrefixListBase):
                     f.write(self.deny_all(afi))
         except Exception as e:
             self.err("Failed to write {}: {}".format(path, e))
+            raise e
 
     def prefix_list_line(self, index, entry):
         """Generate a line in a prefix-list."""
