@@ -28,6 +28,19 @@ class TestPrefixListWorker(object):
         """Test case for PrefixListWorker initialisation."""
         assert isinstance(worker, PrefixListWorker)
 
+    @pytest.mark.parametrize("entries", (
+        [],
+        [{"prefix": "2001:db8:b00::/48", "exact": True},
+         {"prefix": "2001:db8:f00::/48", "exact": True}]
+    ))
+    def test_write_prefix_list(self, worker, mocker, entries):
+        """Test case for 'write_prefix_list' method."""
+        m = mocker.patch("__builtin__.open", mocker.mock_open())
+        path = "/tmp/foo"
+        worker.write_prefix_list(path, entries, "ipv6")
+        m.assert_called_once_with(path, "w")
+        assert m().write.call_count == max(len(entries), 1)
+
     @pytest.mark.parametrize(("entry", "expect"), (
         ({"prefix": "10.0.0.0/8", "exact": True}, "seq 1 permit 10.0.0.0/8\n"),
         ({"prefix": "2001:db8::/32", "exact": False,
