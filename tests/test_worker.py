@@ -12,7 +12,6 @@
 """Tests for prefix_list_agent.worker module."""
 
 from __future__ import print_function
-from __future__ import unicode_literals
 
 import StringIO
 import urllib2
@@ -29,16 +28,43 @@ class TestPrefixListWorker(object):
         """Test case for PrefixListWorker initialisation."""
         assert isinstance(worker, PrefixListWorker)
 
+    @pytest.mark.parametrize(("afi", "expect"), (
+        ("ipv4", "seq 1 deny 0.0.0.0/0 le 32\n"),
+        ("ipv6", "seq 1 deny ::/0 le 128\n"),
+        pytest.param("foo", False,
+                     marks=pytest.mark.xfail(raises=KeyError))
+    ))
+    def test_deny_all(self, worker, afi, expect):
+        """Test case for 'deny_all' method."""
+        line = worker.deny_all(afi)
+        assert line == expect
+
+    @pytest.mark.parametrize(("cmd", "allow_empty"), (
+        ("test", False),
+        ("empty", True),
+        pytest.param("empty", False,
+                     marks=pytest.mark.xfail(raises=KeyError)),
+        pytest.param("fail", False,
+                     marks=pytest.mark.xfail(raises=RuntimeError)),
+        pytest.param("error", False,
+                     marks=pytest.mark.xfail(raises=StandardError))
+    ))
+    def test_eapi_request(self, worker, cmd, allow_empty):
+        """Test case for 'eapi_request' method."""
+        result = worker.eapi_request(cmd, "{}_resp".format(cmd), allow_empty)
+        if allow_empty:
+            assert result == {}
+        else:
+            assert result["foo"] == "bar"
+
     @pytest.mark.parametrize("side_effect", (
         (urllib2.addinfourl(url="/testing", code=200, headers=None,
                             fp=StringIO.StringIO('{"foo":"bar"}')),),
         pytest.param(urllib2.URLError(reason="Testing"),
-                     marks=pytest.mark.xfail(raises=urllib2.URLError,
-                                             strict=True)),
+                     marks=pytest.mark.xfail(raises=urllib2.URLError)),
         pytest.param(urllib2.HTTPError(url="/testing", code=500,
                                        msg="Testing", hdrs=None, fp=None),
-                     marks=pytest.mark.xfail(raises=urllib2.HTTPError,
-                                             strict=True))
+                     marks=pytest.mark.xfail(raises=urllib2.HTTPError))
     ))
     def test_rptk_request(self, mocker, worker, side_effect):
         """Test case for 'rptk_request' method."""

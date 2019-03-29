@@ -12,7 +12,8 @@
 """Fixtures for prefix_list_agent test cases."""
 
 from __future__ import print_function
-from __future__ import unicode_literals
+
+import json
 
 import mock
 import pytest
@@ -44,7 +45,10 @@ class DummySdk(object):
                         "source_dir": "/foo/bar",
                         "refresh_interval": 60,
                         "bad_option": None}
-        mgr.agent_option_iter.return_value = test_options.keys()
+
+        def agent_option_iter():
+            return test_options.keys()
+        mgr.agent_option_iter.side_effect = agent_option_iter
 
         def agent_option(key):
             return test_options[key]
@@ -60,6 +64,21 @@ class DummySdk(object):
     def get_eapi_mgr(self):
         """Stub for 'get_eapi_mgr' method."""
         mgr = mock.create_autospec(eossdk.EapiMgr)
+
+        def run_show_cmd(cmd):
+            if cmd == "error":
+                raise StandardError
+            elif cmd == "fail":
+                resp = eossdk.EapiResponse(False, 255, "synthetic_failure", [])
+            elif cmd == "empty":
+                result = json.dumps({})
+                resp = eossdk.EapiResponse(True, 0, "", [result])
+            else:
+                result = json.dumps({"{}_resp".format(cmd): {"foo": "bar"}})
+                resp = eossdk.EapiResponse(True, 0, "", [result])
+            return resp
+        mgr.run_show_cmd.side_effect = run_show_cmd
+
         return mgr
 
 

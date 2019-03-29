@@ -12,7 +12,6 @@
 """Tests for prefix_list_agent.cli module."""
 
 from __future__ import print_function
-from __future__ import unicode_literals
 
 import sys
 
@@ -35,7 +34,7 @@ class TestCli(object):
 
     @pytest.mark.parametrize(("arg", "ret"),
                              ((None, None), (KeyboardInterrupt, 130),
-                             (StandardError, StandardError)))
+                              (StandardError, StandardError)))
     def test_start(self, sdk, mocker, arg, ret):
         """Test case for cli entrypoint."""
         self.module_patch(mocker, "eossdk", PrefixListAgent)

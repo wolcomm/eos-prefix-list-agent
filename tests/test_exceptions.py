@@ -12,7 +12,6 @@
 """Tests for prefix_list_agent.exceptions module."""
 
 from __future__ import print_function
-from __future__ import unicode_literals
 
 import signal
 
