@@ -248,6 +248,7 @@ class PrefixListWorker(multiprocessing.Process, PrefixListBase):
             raise e
         except urllib2.URLError as e:
             self.err("Request failed: {}".format(e))
+            raise e
         self.debug("Request successful: {}".format(resp.getcode()))
         result = self.json_load(resp)
         return result
