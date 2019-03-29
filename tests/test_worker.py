@@ -28,6 +28,17 @@ class TestPrefixListWorker(object):
         """Test case for PrefixListWorker initialisation."""
         assert isinstance(worker, PrefixListWorker)
 
+    @pytest.mark.parametrize(("entry", "expect"), (
+        ({"prefix": "10.0.0.0/8", "exact": True}, "seq 1 permit 10.0.0.0/8\n"),
+        ({"prefix": "2001:db8::/32", "exact": False,
+          "greater-equal": 48, "less-equal": 64},
+         "seq 1 permit 2001:db8::/32 ge 48 le 64\n")
+    ))
+    def test_prefix_list_line(self, worker, entry, expect):
+        """Test case for 'prefix_list_line' method."""
+        line = worker.prefix_list_line(0, entry)
+        assert line == expect
+
     @pytest.mark.parametrize(("afi", "expect"), (
         ("ipv4", "seq 1 deny 0.0.0.0/0 le 32\n"),
         ("ipv6", "seq 1 deny ::/0 le 128\n"),
