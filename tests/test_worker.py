@@ -13,6 +13,7 @@
 
 from __future__ import print_function
 
+import json
 import StringIO
 import urllib2
 
@@ -27,6 +28,32 @@ class TestPrefixListWorker(object):
     def test_init(self, worker):
         """Test case for PrefixListWorker initialisation."""
         assert isinstance(worker, PrefixListWorker)
+
+    def test_get_data_bulk(self, worker, mocker):
+        """Test case for 'get_data_obj' method."""
+        policy = "strict"
+        objs = ["AS-FOO", "AS-BAR"]
+        resp_data = {obj: {"ipv4": [], "ipv6": []} for obj in objs}
+        resp_fp = StringIO.StringIO(json.dumps(resp_data))
+        return_value = urllib2.addinfourl(url="/testing", code=200,
+                                          headers=None, fp=resp_fp)
+        mocker.patch.object(urllib2, "urlopen", autospec=True,
+                            return_value=return_value)
+        result = worker.get_data_bulk(policy, objs)
+        assert result == resp_data
+
+    def test_get_data_obj(self, worker, mocker):
+        """Test case for 'get_data_obj' method."""
+        policy = "strict"
+        obj = "AS-FOO"
+        resp_data = {obj: {"ipv4": [], "ipv6": []}}
+        resp_fp = StringIO.StringIO(json.dumps(resp_data))
+        return_value = urllib2.addinfourl(url="/testing", code=200,
+                                          headers=None, fp=resp_fp)
+        mocker.patch.object(urllib2, "urlopen", autospec=True,
+                            return_value=return_value)
+        result = worker.get_data_obj(policy, obj)
+        assert result == resp_data
 
     @pytest.mark.parametrize(("configured", "data"), (
         ({"strict": {"AS-FOO": {"ipv4": "as-foo-4", "ipv6": "as-foo-6"},
