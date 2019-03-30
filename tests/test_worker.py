@@ -29,6 +29,17 @@ class TestPrefixListWorker(object):
         """Test case for PrefixListWorker initialisation."""
         assert isinstance(worker, PrefixListWorker)
 
+    def test_get_policies(self, worker, mocker):
+        """Test case for 'get_policies' method."""
+        resp_data = {"strict": "strict descr", "loose": "loose descr"}
+        resp_fp = StringIO.StringIO(json.dumps(resp_data))
+        return_value = urllib2.addinfourl(url="/testing", code=200,
+                                          headers=None, fp=resp_fp)
+        mocker.patch.object(urllib2, "urlopen", autospec=True,
+                            return_value=return_value)
+        policies = worker.get_policies()
+        assert policies == resp_data
+
     def test_get_data_bulk(self, worker, mocker):
         """Test case for 'get_data_obj' method."""
         policy = "strict"
@@ -152,3 +163,20 @@ class TestPrefixListWorker(object):
         """Test case for 'json_load' method."""
         result = worker.json_load(obj)
         assert result["foo"] == "bar"
+
+    def test_property_data(self, worker):
+        """Test case for 'data' property."""
+        assert worker.data is None
+        send_data = {"foo": "bar"}
+        worker.c_data.send(send_data)
+        recv_data = worker.data
+        assert recv_data == send_data
+
+    def test_property_error(self, worker):
+        """Test case for 'error' property."""
+        assert worker.error is None
+        send_error = Exception()
+        worker.c_err.send(send_error)
+        recv_error = worker.error
+        assert (type(recv_error) is type(send_error) and
+                recv_error.args == send_error.args)
