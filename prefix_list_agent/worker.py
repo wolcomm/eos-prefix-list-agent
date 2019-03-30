@@ -57,7 +57,7 @@ class PrefixListWorker(multiprocessing.Process, PrefixListBase):
             self.err(e)
             try:
                 self.c_err.send(e)
-            except TypeError:
+            except TypeError:  # pragma: no cover
                 self.c_err.send(Exception(str(e)))
         finally:
             self.c_err.close()
@@ -194,7 +194,7 @@ class PrefixListWorker(multiprocessing.Process, PrefixListBase):
                         f.write(self.prefix_list_line(i, p))
                 else:
                     f.write(self.deny_all(afi))
-        except Exception as e:  # pragma: no cover
+        except Exception as e:
             self.err("Failed to write {}: {}".format(path, e))
             raise e
 

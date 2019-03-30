@@ -19,6 +19,7 @@ import urllib2
 
 import pytest
 
+from prefix_list_agent.exceptions import TermException
 from prefix_list_agent.worker import PrefixListWorker
 
 
@@ -28,6 +29,40 @@ class TestPrefixListWorker(object):
     def test_init(self, worker):
         """Test case for PrefixListWorker initialisation."""
         assert isinstance(worker, PrefixListWorker)
+
+    @pytest.mark.parametrize(("case", "side_effect"), (
+        ("success", ({"foo": "bar"},)),
+        ("sigterm", TermException),
+        ("error", StandardError),
+    ))
+    def test_run(self, worker, mocker, case, side_effect):
+        """Test case for 'run' method."""
+        for method in ("get_policies", "get_configured", "get_data",
+                       "refresh_all", "notice"):
+            mocker.patch.object(worker, method)
+        mocker.patch.object(worker, "write_results", side_effect=side_effect)
+        worker.run()
+        if case == "success":
+            assert worker.data == {"foo": "bar"}
+        elif case == "sigterm":
+            worker.notice.assert_called_once_with("Got SIGTERM signal: exiting.")  # noqa: E501
+        elif case == "error":
+            assert type(worker.error) is StandardError
+        else:
+            raise ValueError(case)
+
+    def test_get_configured(self, worker):
+        """Test case for 'test_get_configured' method."""
+        configured = worker.get_configured(["strict"])
+        expect = {"strict": {"AS-FOO": {"ipv4": "as-foo",
+                                        "ipv6": "as-foo"}}}
+        assert worker.eapi.run_show_cmd.call_count == 2
+        assert configured == expect
+
+    def test_refresh_all(self, worker):
+        """Test case for 'refrech_all' method."""
+        worker.refresh_all()
+        assert worker.eapi.run_show_cmd.call_count == 2
 
     def test_get_policies(self, worker, mocker):
         """Test case for 'get_policies' method."""
@@ -105,14 +140,16 @@ class TestPrefixListWorker(object):
         assert stats["succeeded"] == 2
         assert stats["failed"] == 2
 
-    @pytest.mark.parametrize("entries", (
-        [],
-        [{"prefix": "2001:db8:b00::/48", "exact": True},
-         {"prefix": "2001:db8:f00::/48", "exact": True}]
+    @pytest.mark.parametrize(("entries", "side_effect"), (
+        ([], None),
+        ([{"prefix": "2001:db8:b00::/48", "exact": True},
+         {"prefix": "2001:db8:f00::/48", "exact": True}], None),
+        pytest.param([], IOError, marks=pytest.mark.xfail(raises=IOError))
     ))
-    def test_write_prefix_list(self, worker, mocker, entries):
+    def test_write_prefix_list(self, worker, mocker, entries, side_effect):
         """Test case for 'write_prefix_list' method."""
         m = mocker.patch("__builtin__.open", mocker.mock_open())
+        m.side_effect = side_effect
         path = "/tmp/foo"
         worker.write_prefix_list(path, entries, "ipv6")
         m.assert_called_once_with(path, "w")

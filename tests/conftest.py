@@ -69,14 +69,21 @@ class DummySdk(object):
             if cmd == "error":
                 raise StandardError
             elif cmd == "fail":
-                resp = eossdk.EapiResponse(False, 255, "synthetic_failure", [])
+                return eossdk.EapiResponse(False, 255, "synthetic_failure", [])
             elif cmd == "empty":
                 result = json.dumps({})
-                resp = eossdk.EapiResponse(True, 0, "", [result])
+            elif cmd.startswith("refresh"):
+                result = json.dumps({"messages": ["Dummy message"]})
+            elif cmd.startswith("show"):
+                result = json.dumps({"ipPrefixLists": {
+                    "AS-FOO": {"ipPrefixListSource": "file:/tmp/prefix-lists/strict/as-foo"},  # noqa: E501
+                    "AS-BAR": {},
+                    "AS-BAZ": {"ipPrefixListSource": "file:/baz/as-baz"},
+                    "AS-QUX": {"ipPrefixListSource": "file:/tmp/prefix-lists/qux/as-qux"}  # noqa: E501
+                }})
             else:
                 result = json.dumps({"{}_resp".format(cmd): {"foo": "bar"}})
-                resp = eossdk.EapiResponse(True, 0, "", [result])
-            return resp
+            return eossdk.EapiResponse(True, 0, "", [result])
         mgr.run_show_cmd.side_effect = run_show_cmd
 
         return mgr
