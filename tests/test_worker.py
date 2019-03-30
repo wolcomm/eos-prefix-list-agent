@@ -14,7 +14,9 @@
 from __future__ import print_function
 
 import json
+import signal
 import StringIO
+import time
 import urllib2
 
 import pytest
@@ -50,6 +52,31 @@ class TestPrefixListWorker(object):
             assert type(worker.error) is StandardError
         else:
             raise ValueError(case)
+
+    @pytest.mark.parametrize(("case", "side_effect"), (
+        ("success", ({"foo": "bar"},)),
+        ("sigterm", TermException),
+        ("error", StandardError),
+    ))
+    def test_start(self, worker, mocker, case, side_effect):
+        """Test case for 'start' method."""
+        for method in ("get_policies", "get_configured", "get_data",
+                       "refresh_all", "notice"):
+            mocker.patch.object(worker, method)
+        mocker.patch.object(worker, "write_results", side_effect=side_effect)
+        worker.start()
+        time.sleep(1)
+        if case == "success":
+            assert worker.data == {"foo": "bar"}
+        elif case == "sigterm":
+            assert worker.exitcode == 127 + signal.SIGTERM
+        elif case == "error":
+            assert type(worker.error) is StandardError
+        else:
+            raise ValueError(case)
+        if worker.is_alive():
+            worker.terminate()
+            worker.join()
 
     def test_get_configured(self, worker):
         """Test case for 'test_get_configured' method."""

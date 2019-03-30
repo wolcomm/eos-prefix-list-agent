@@ -19,6 +19,7 @@ import multiprocessing
 import os
 import re
 import signal
+import sys
 import urllib2
 
 from prefix_list_agent.base import PrefixListBase
@@ -53,6 +54,8 @@ class PrefixListWorker(multiprocessing.Process, PrefixListBase):
             self.c_data.send(stats)
         except TermException:
             self.notice("Got SIGTERM signal: exiting.")
+            if os.getpid() == self.pid:
+                sys.exit(127 + signal.SIGTERM)
         except Exception as e:
             self.err(e)
             try:
