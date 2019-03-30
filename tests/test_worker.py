@@ -28,6 +28,22 @@ class TestPrefixListWorker(object):
         """Test case for PrefixListWorker initialisation."""
         assert isinstance(worker, PrefixListWorker)
 
+    @pytest.mark.parametrize(("configured", "data"), (
+        ({"strict": {"AS-FOO": {"ipv4": "as-foo-4", "ipv6": "as-foo-6"},
+                     "AS-BAR": {"ipv4": "as-bar-4", "ipv6": "as-bar-6"}},
+          "empty": {}},
+         {"strict": {"AS-FOO": {"ipv4": [{"prefix": "192.0.2.0/24",
+                                          "exact": True}],
+                                "ipv6": [{"prefix": "2001:db8::/32",
+                                          "exact": True}]}}}),
+    ))
+    def test_write_results(self, worker, mocker, configured, data):
+        """Test case for 'write_results' method."""
+        mocker.patch("__builtin__.open", mocker.mock_open())
+        stats = worker.write_results(configured, data)
+        assert stats["succeeded"] == 2
+        assert stats["failed"] == 2
+
     @pytest.mark.parametrize("entries", (
         [],
         [{"prefix": "2001:db8:b00::/48", "exact": True},
