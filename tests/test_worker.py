@@ -40,6 +40,29 @@ class TestPrefixListWorker(object):
         policies = worker.get_policies()
         assert policies == resp_data
 
+    def test_get_data(self, worker, mocker):
+        """Test case for 'get_data' method."""
+        configured = {"strict": {"AS-FOO": {"ipv4": "as-foo-4",
+                                            "ipv6": "as-foo-6"},
+                                 "AS-BAR": {"ipv4": "as-bar-4",
+                                            "ipv6": "as-bar-6"}},
+                      "loose":  {"AS-BAZ": {"ipv4": "as-baz-4",
+                                            "ipv6": "as-baz-6"},
+                                 "AS-QUX": {"ipv4": "as-qux-4",
+                                            "ipv6": "as-qux-6"}},
+                      "empty":  {}}
+        data = {"strict": {"AS-FOO": {"ipv4": [], "ipv6": []},
+                           "AS-BAR": {"ipv4": [], "ipv6": []}},
+                "loose":  {"AS-BAZ": {"ipv4": [], "ipv6": []}}}
+        mocker.patch.object(worker, "get_data_bulk", autospec=True,
+                            side_effect=(data["strict"], StandardError))
+        mocker.patch.object(worker, "get_data_obj", autospec=True,
+                            side_effect=(data["loose"], StandardError))
+        result = worker.get_data(configured)
+        assert result == data
+        assert worker.get_data_bulk.call_count == 2
+        assert worker.get_data_obj.call_count == 2
+
     def test_get_data_bulk(self, worker, mocker):
         """Test case for 'get_data_obj' method."""
         policy = "strict"
