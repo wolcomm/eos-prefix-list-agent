@@ -189,7 +189,7 @@ class PrefixListAgent(PrefixListBase, eossdk.AgentHandler,
         self.init()
         self.run()
 
-    def init(self):
+    def init(self):  # pragma: no cover
         """Perform one-time start actions."""
         pass
 

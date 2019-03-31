@@ -90,3 +90,82 @@ class TestPrefixListAgent(object):
         agent.configure()
         agent.agent_mgr.agent_option_iter.assert_called_once()
         assert agent.agent_mgr.agent_option.call_count == 4
+
+    @pytest.mark.parametrize(("key", "value"), (
+        ("rptk_endpoint", "https://x.com"),
+        ("source_dir", "/foo/bar"),
+        ("refresh_interval", 60),
+        ("bad_option", None)
+    ))
+    def test_set(self, agent, mocker, key, value):
+        """Test case for 'set' method."""
+        mocker.patch.object(agent, "warning", autospec=True)
+        agent.set(key, value)
+        if key in agent.agent_options:
+            assert getattr(agent, key) == value
+        else:
+            agent.warning.assert_called_once_with("Ignoring unknown option '{}'"  # noqa: E501
+                                                  .format(key))
+
+    def test_start(self, agent, mocker):
+        """Test case for 'start' method."""
+        methods = ("configure", "init", "run")
+        for method in methods:
+            mocker.patch.object(agent, method, autospec=True)
+        agent.start()
+        for method in methods:
+            getattr(agent, method).assert_called_once_with()
+
+    def test_sleep(self, agent, mocker):
+        """Test case for 'sleep' method."""
+        mocker.patch("eossdk.now", autospec=True, return_value=0)
+        mocker.patch.object(agent, "timeout_time_is")
+        agent.sleep()
+        agent.timeout_time_is.assert_called_once_with(agent.refresh_interval)
+
+    @pytest.mark.parametrize("side_effect", ((None,), StandardError))
+    def test_shutdown(self, agent, mocker, side_effect):
+        """Test case for 'shutdown' method."""
+        mocker.patch.object(agent, "cleanup", autospec=True,
+                            side_effect=side_effect)
+        agent.shutdown()
+        agent.cleanup.assert_called_once_with(process=agent.worker)
+        agent.agent_mgr.agent_shutdown_complete_is.assert_called_once_with(True)  # noqa: E501
+
+    @pytest.mark.parametrize("side_effect", ((None,), StandardError))
+    def test_restart(self, agent, mocker, side_effect):
+        """Test case for 'restart' method."""
+        mocker.patch.object(agent, "cleanup", autospec=True,
+                            side_effect=side_effect)
+        mocker.patch.object(agent, "start", autospec=True)
+        agent.restart()
+        agent.cleanup.assert_called_once_with(process=agent.worker)
+        agent.start.assert_called_once_with()
+
+    def test_on_initialized(self, agent, mocker):
+        """Test case for 'on_initialized' method."""
+        mocker.patch.object(agent, "start", autospec=True)
+        agent.on_initialized()
+        agent.start.assert_called_once_with()
+
+    def test_on_agent_option(self, agent, mocker):
+        """Test case for 'on_agent_option' method."""
+        mocker.patch.object(agent, "set", autospec=True)
+        agent.on_agent_option("foo", "bar")
+        agent.set.assert_called_once_with("foo", "bar")
+
+    @pytest.mark.parametrize("enabled", (True, False))
+    def test_on_agent_enabled(self, agent, mocker, enabled):
+        """Test case for 'on_agent_enabled' method."""
+        mocker.patch.object(agent, "notice", autospec=True)
+        mocker.patch.object(agent, "shutdown", autospec=True)
+        agent.on_agent_enabled(enabled)
+        assert agent.notice.call_count == 1
+        if not enabled:
+            agent.shutdown.assert_called_once_with()
+
+    def test_on_timeout(self, agent, mocker):
+        """Test case for 'on_timeout' method."""
+        mocker.patch.object(agent, "run", autospec=True)
+        agent.on_timeout()
+        agent.run.assert_called_once_with()
