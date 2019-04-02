@@ -38,8 +38,28 @@ class PrefixListWorker(multiprocessing.Process, PrefixListBase):
         self.eapi = eapi
         self.path_re = re.compile(r"^file:{}/(?P<policy>\w+)/(?P<file>[-.:\w]+)$"  # noqa: E501
                                   .format(self.path.rstrip("/")))
-        self.p_err, self.c_err = multiprocessing.Pipe(duplex=False)
-        self.p_data, self.c_data = multiprocessing.Pipe(duplex=False)
+        self._p_err, self._c_err = multiprocessing.Pipe(duplex=False)
+        self._p_data, self._c_data = multiprocessing.Pipe(duplex=False)
+
+    @property
+    def p_err(self):
+        """Get 'p_err' property."""
+        return self._p_err
+
+    @property
+    def c_err(self):
+        """Get 'c_err' property."""
+        return self._c_err
+
+    @property
+    def p_data(self):
+        """Get 'p_data' property."""
+        return self._p_data
+
+    @property
+    def c_data(self):
+        """Get 'c_data' property."""
+        return self._c_data
 
     def run(self):
         """Run the worker process."""
