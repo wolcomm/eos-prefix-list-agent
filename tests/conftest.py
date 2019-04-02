@@ -20,6 +20,8 @@ import pytest
 
 import eossdk
 
+from _multiprocessing import Connection
+
 from prefix_list_agent.agent import PrefixListAgent
 from prefix_list_agent.worker import PrefixListWorker
 
@@ -41,7 +43,7 @@ class DummySdk(object):
         """Stub for 'get_agent_mgr' method."""
         mgr = mock.create_autospec(eossdk.AgentMgr)
 
-        test_options = {"rptk_endpoint": "https://x.com",
+        test_options = {"rptk_endpoint": "https://example.com",
                         "source_dir": "/foo/bar",
                         "refresh_interval": 60,
                         "bad_option": None}
@@ -112,3 +114,10 @@ def worker(agent):
                               path=agent.source_dir,
                               eapi=agent.eapi_mgr)
     return worker
+
+
+@pytest.fixture()
+def connection(mocker):
+    """Provide a mocked Connection instance."""
+    conn = mock.create_autospec(Connection)
+    return conn

@@ -116,6 +116,43 @@ class TestPrefixListAgent(object):
         for method in methods:
             getattr(agent, method).assert_called_once_with()
 
+    @pytest.mark.parametrize("side_effect", ((None,), StandardError()))
+    @pytest.mark.parametrize("rptk_endpoint", ("https://example.com", None))
+    def test_run(self, agent, worker, mocker, side_effect, rptk_endpoint):
+        """Test case for 'run' method."""
+        mock_worker = mocker.patch("prefix_list_agent.agent.PrefixListWorker",
+                                   autospec=True)
+        mock_worker.return_value.start.side_effect = side_effect
+        for method in ("watch", "failure", "sleep"):
+            mocker.patch.object(agent, method, autospec=True)
+        agent.rptk_endpoint = rptk_endpoint
+        agent.run()
+        if agent.rptk_endpoint is None:
+            agent.sleep.assert_called_once_with()
+        else:
+            assert agent.watch.call_count == 2
+            agent.worker.start.assert_called_once_with()
+            if issubclass(type(side_effect), Exception):
+                assert agent.failure.call_count == 1
+
+    def test_watch(self, agent, mocker, connection):
+        """Test case for 'watch' method."""
+        mocker.patch.object(agent, "watch_readable")
+        agent.watch(connection, "test")
+        agent.watch_readable.assert_called_once_with(connection.fileno(), True)
+        assert connection in agent.watching
+
+    @pytest.mark.parametrize("close", (True, False))
+    def test_unwatch(self, agent, mocker, connection, close):
+        """Test case for 'unwatch' method."""
+        mocker.patch.object(agent, "watch_readable")
+        agent.watching.add(connection)
+        agent.unwatch(connection, close=close)
+        agent.watch_readable.assert_called_once_with(connection.fileno(),
+                                                     False)
+        if close:
+            connection.close.assert_called_once_with()
+
     def test_sleep(self, agent, mocker):
         """Test case for 'sleep' method."""
         mocker.patch("eossdk.now", autospec=True, return_value=0)
