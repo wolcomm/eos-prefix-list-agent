@@ -206,3 +206,23 @@ class TestPrefixListAgent(object):
         mocker.patch.object(agent, "run", autospec=True)
         agent.on_timeout()
         agent.run.assert_called_once_with()
+
+    @pytest.mark.parametrize("fd", (1, 2, 3))
+    def test_on_readable(self, agent, mocker, fd):
+        """Test case for 'on_readable' method."""
+        mock_worker = mocker.patch("prefix_list_agent.agent.PrefixListWorker",
+                                   autospec=True)
+        mock_worker.return_value.p_data.fileno.return_value = 1
+        mock_worker.return_value.p_err.fileno.return_value = 2
+        for method in ("success", "failure", "warning"):
+            mocker.patch.object(agent, method, autospec=True)
+        agent.worker = mock_worker(endpoint=agent.rptk_endpoint,
+                                   path=agent.source_dir,
+                                   eapi=agent.eapi_mgr)
+        agent.on_readable(fd)
+        if fd == 1:
+            agent.success.assert_called_once_with()
+        elif fd == 2:
+            agent.failure.assert_called_once_with(process=agent.worker)
+        else:
+            agent.warning.assert_called_once_with("Unknown file descriptor: ignoring")  # noqa: E501
