@@ -14,6 +14,8 @@ env:
   - CEOS_VERSION="4.21.0F"
   - CEOS_VERSION="4.21.2F"
   - CEOS_VERSION="latest"
+  - TEST_SUITE="00_unit"
+  - TEST_SUITE="01_integration"
 matrix:
   fast_finish: true
 before_install:
@@ -23,7 +25,7 @@ install:
 - IMAGE_ID="$(docker build --build-arg REGISTRY="${AZURE_ACR_URI}" --build-arg VERSION="${CEOS_VERSION}" --quiet .)"
 - CONTAINER_ID="$(docker run --detach --privileged --rm "${IMAGE_ID}")"
 script:
-- docker exec --interactive --tty "${CONTAINER_ID}" pytest
+- docker exec --interactive --tty "${CONTAINER_ID}" pytest "tests/${TEST_SUITE}"
 after_success:
 - docker cp "${CONTAINER_ID}:/root/coverage.xml" "./"
 - codecov -e CEOS_VERSION

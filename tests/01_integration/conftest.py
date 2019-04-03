@@ -21,10 +21,10 @@ import pytest
 @pytest.fixture(scope="module")
 def node():
     """Provide a pyeapi node connected to the local unix socket."""
-    for retry in range(10):
+    for retry in range(60):
         try:
             import pyeapi
-            conn = pyeapi.connect(transport=u"socket")
+            conn = pyeapi.connect(transport="socket")
             node = pyeapi.client.Node(conn)
             assert node.version
             break
@@ -40,14 +40,14 @@ def node():
 def configure(node):
     """Configure the agent as an EOS ProcMgr daemon."""
     agent_config = [
-        u"trace PrefixListAgent-PrefixListAgent setting PrefixList*/*",
-        u"daemon PrefixListAgent",
-        u"exec /root/bin/PrefixListAgent",
-        u"option rptk_endpoint value http://localhost:8080/",
-        u"option refresh_interval value 10",
-        u"no shutdown"
+        "trace PrefixListAgent-PrefixListAgent setting PrefixList*/*",
+        "daemon PrefixListAgent",
+        "exec /root/bin/PrefixListAgent",
+        "option rptk_endpoint value http://localhost:8080/",
+        "option refresh_interval value 10",
+        "no shutdown"
     ]
     node.config(agent_config)
     time.sleep(3)
     yield
-    node.config(u"no daemon PrefixListAgent")
+    node.config("no daemon PrefixListAgent")

@@ -10,4 +10,4 @@ RUN echo "nameserver 9.9.9.9" > /etc/resolv.conf
 RUN pip install --upgrade pip
 RUN pip install --requirement packaging/requirements-test.txt
 RUN pip install --editable .
-RUN cp tests/integration/startup-config /mnt/flash/
+RUN cp tests/data/startup-config /mnt/flash/

@@ -16,14 +16,18 @@ from __future__ import print_function
 import pytest
 
 
+NAME = "PrefixListAgent"
+
+
 @pytest.mark.usefixtures(u"configure")
 class TestPrefixListAgentDaemon(object):
     """Integration test cases for PrefixListAgent."""
 
     def test_running(self, node):
         """Test that the agent is running."""
-        pass
-        # logs = node.enable("show agent PrefixListAgent logs")
-        # print(logs)
-        # status = node.enable("show daemon PrefixListAgent")
-        # print(status)
+        resp = node.enable("show daemon {}".format(NAME))
+        status = resp[0]["result"]["daemons"]
+        assert NAME in status
+        assert status[NAME]["isSdkAgent"]
+        assert status[NAME]["enabled"]
+        assert status[NAME]["running"]
