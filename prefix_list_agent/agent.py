@@ -279,14 +279,15 @@ class PrefixListAgent(PrefixListBase, eossdk.AgentHandler,
         self.info("Cleaning up {} process".format(process_name))
         if process is not None:
             self.info("Closing connections from {}".format(process_name))
-            try:
-                for conn in [c for c in
-                             [getattr(process, k) for k in dir(process)]
-                             if isinstance(c, collections.Hashable)
-                             and c in self.watching]:
+            for conn in [c for c in
+                         [getattr(process, k) for k in dir(process)
+                          if not k.startswith("_")]
+                         if isinstance(c, collections.Hashable)
+                         and c in self.watching]:
+                try:
                     self.unwatch(conn, close=True)
-            except Exception as e:
-                self.err(e)
+                except Exception as e:
+                    self.err(e)
             for retry in range(3):
                 if process.is_alive():
                     if retry:
