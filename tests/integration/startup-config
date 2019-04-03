@@ -1,0 +1,16 @@
+! startup-config for test container
+!
+transceiver qsfp default-mode 4x10G
+!
+spanning-tree mode mstp
+!
+no aaa root
+!
+no ip routing
+!
+management api http-commands
+   no protocol https
+   protocol unix-socket
+   no shutdown
+!
+end

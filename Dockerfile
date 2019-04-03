@@ -7,5 +7,7 @@ WORKDIR /root
 COPY . .
 
 RUN echo "nameserver 9.9.9.9" > /etc/resolv.conf
-RUN pip install -r packaging/requirements-test.txt
-RUN pip install -e .
+RUN pip install --upgrade pip
+RUN pip install --requirement packaging/requirements-test.txt
+RUN pip install --editable .
+RUN cp tests/integration/startup-config /mnt/flash/
