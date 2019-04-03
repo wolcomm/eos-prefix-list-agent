@@ -41,8 +41,9 @@ class TestPrefixListWorker(object):
         """Test case for 'run' method."""
         for method in ("get_policies", "get_configured", "get_data",
                        "refresh_all", "notice"):
-            mocker.patch.object(worker, method)
-        mocker.patch.object(worker, "write_results", side_effect=side_effect)
+            mocker.patch.object(worker, method, autospec=True)
+        mocker.patch.object(worker, "write_results", autospec=True,
+                            side_effect=side_effect)
         worker.run()
         if case == "success":
             assert worker.data == {"foo": "bar"}
@@ -62,8 +63,9 @@ class TestPrefixListWorker(object):
         """Test case for 'start' method."""
         for method in ("get_policies", "get_configured", "get_data",
                        "refresh_all", "notice"):
-            mocker.patch.object(worker, method)
-        mocker.patch.object(worker, "write_results", side_effect=side_effect)
+            mocker.patch.object(worker, method, autospec=True)
+        mocker.patch.object(worker, "write_results", autospec=True,
+                            side_effect=side_effect)
         worker.start()
         time.sleep(1)
         if case == "success":
