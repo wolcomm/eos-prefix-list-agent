@@ -14,10 +14,13 @@
 from __future__ import print_function
 
 import datetime
+import signal
+import time
 
 import pytest
 
 from prefix_list_agent.agent import PrefixListAgent
+from prefix_list_agent.exceptions import handle_sigterm, TermException
 
 
 class TestPrefixListAgent(object):
@@ -152,6 +155,95 @@ class TestPrefixListAgent(object):
                                                      False)
         if close:
             connection.close.assert_called_once_with()
+
+    def test_success(self, agent, mocker):
+        """Test case for 'success' method."""
+        for method in ("report", "cleanup", "sleep"):
+            mocker.patch.object(agent, method, autospec=True)
+        stats = {"foo": "bar"}
+        mock_worker = mocker.patch("prefix_list_agent.agent.PrefixListWorker",
+                                   autospec=True)
+        mock_worker.return_value.data = stats
+        agent.worker = mock_worker(endpoint=agent.rptk_endpoint,
+                                   path=agent.source_dir,
+                                   eapi=agent.eapi_mgr)
+        agent.success()
+        agent.report.assert_called_once_with(**stats)
+        agent.cleanup.assert_called_once_with(process=agent.worker)
+        agent.sleep.assert_called_once_with()
+
+    @pytest.mark.parametrize("local_err", (None, StandardError("test_error")))
+    @pytest.mark.parametrize("worker_process", (True, False))
+    @pytest.mark.parametrize("restart", (True, False))
+    def test_failure(self, agent, mocker, local_err, worker_process, restart):
+        """Test case for 'failure' method."""
+        for method in ("err", "restart", "cleanup", "sleep"):
+            mocker.patch.object(agent, method, autospec=True)
+        mock_worker = mocker.patch("prefix_list_agent.agent.PrefixListWorker",
+                                   autospec=True)
+        worker_err = StandardError("worker_err")
+        mock_worker.return_value.error = worker_err
+        agent.worker = mock_worker(endpoint=agent.rptk_endpoint,
+                                   path=agent.source_dir,
+                                   eapi=agent.eapi_mgr)
+        if worker_process:
+            process = agent.worker
+        else:
+            process = None
+        agent.failure(err=local_err, process=process, restart=restart)
+        if local_err is None:
+            if process is None:
+                assert agent.err.call_count == 2
+            else:
+                agent.err.assert_called_once_with(worker_err)
+        else:
+            agent.err.assert_called_once_with(local_err)
+        if restart:
+            agent.restart.assert_called_once_with()
+        else:
+            agent.cleanup.assert_called_once_with(process=process)
+            agent.sleep.assert_called_once_with()
+
+    def test_report(self, agent):
+        """Test case for 'report' method."""
+        stats = {"foo": 1, "bar": "baz"}
+        agent.report(**stats)
+        assert agent.agent_mgr.status_set.call_count == len(stats)
+
+    @pytest.mark.parametrize("unwatch_err", ((None,), StandardError()))
+    @pytest.mark.parametrize("catch_sigterm", (True, False))
+    def test_cleanup(self, agent, worker, mocker, unwatch_err, catch_sigterm):
+        """Test case for 'cleanup' method."""
+        def run():
+            if catch_sigterm:
+                signal.signal(signal.SIGTERM, handle_sigterm)
+                while True:
+                    try:
+                        time.sleep(1)
+                    except TermException:
+                        pass
+            else:
+                while True:
+                    time.sleep(1)
+        mocker.patch.object(worker, "run", autospec=True, side_effect=run)
+        mocker.patch.object(agent, "unwatch", autospec=True,
+                            side_effect=unwatch_err)
+        for method in ("err", "notice", "info"):
+            mocker.patch.object(agent, method, autospec=True)
+        agent.watching.add(worker.p_data)
+        agent.watching.add(worker.p_err)
+        worker.start()
+        agent.cleanup(worker)
+        agent.unwatch.assert_any_call(worker.p_data, close=True)
+        agent.unwatch.assert_any_call(worker.p_err, close=True)
+        assert agent.unwatch.call_count == 2
+        if isinstance(unwatch_err, Exception):
+            agent.err.assert_called_with(unwatch_err)
+            assert agent.err.call_count == 2
+        if catch_sigterm:
+            agent.notice.assert_called_once_with("Timeout waiting for {}. Sending SIGKILL"  # noqa: E501
+                                                 .format(worker.__class__.__name__))  # noqa: E501
+        assert 5 <= agent.info.call_count <= 9
 
     def test_sleep(self, agent, mocker):
         """Test case for 'sleep' method."""
