@@ -212,11 +212,8 @@ class PrefixListWorker(multiprocessing.Process, PrefixListBase):
         self.info("Trying to write {}".format(path))
         try:
             with open(path, "w") as f:
-                if entries:
-                    for i, p in enumerate(entries):
-                        f.write(self.prefix_list_line(i, p))
-                else:
-                    f.write(self.deny_all(afi))
+                for i, p in enumerate(entries):
+                    f.write(self.prefix_list_line(i, p))
         except Exception as e:
             self.err("Failed to write {}: {}".format(path, e))
             raise e
@@ -230,12 +227,6 @@ class PrefixListWorker(multiprocessing.Process, PrefixListBase):
             if "less-equal" in entry:
                 line += " le {}".format(entry["less-equal"])
         line += "\n"
-        return line
-
-    def deny_all(self, afi):
-        """Generate a deny-all prefix-list statement."""
-        default = {"ipv4": "0.0.0.0/0 le 32", "ipv6": "::/0 le 128"}
-        line = "seq 1 deny {}\n".format(default[afi])
         return line
 
     def eapi_request(self, cmd, result_node, allow_empty=False):

@@ -182,7 +182,7 @@ class TestPrefixListWorker(object):
         path = "/tmp/foo"
         worker.write_prefix_list(path, entries, "ipv6")
         m.assert_called_once_with(path, "w")
-        assert m().write.call_count == max(len(entries), 1)
+        assert m().write.call_count == len(entries)
 
     @pytest.mark.parametrize(("entry", "expect"), (
         ({"prefix": "10.0.0.0/8", "exact": True}, "seq 1 permit 10.0.0.0/8\n"),
@@ -193,17 +193,6 @@ class TestPrefixListWorker(object):
     def test_prefix_list_line(self, worker, entry, expect):
         """Test case for 'prefix_list_line' method."""
         line = worker.prefix_list_line(0, entry)
-        assert line == expect
-
-    @pytest.mark.parametrize(("afi", "expect"), (
-        ("ipv4", "seq 1 deny 0.0.0.0/0 le 32\n"),
-        ("ipv6", "seq 1 deny ::/0 le 128\n"),
-        pytest.param("foo", False,
-                     marks=pytest.mark.xfail(raises=KeyError))
-    ))
-    def test_deny_all(self, worker, afi, expect):
-        """Test case for 'deny_all' method."""
-        line = worker.deny_all(afi)
         assert line == expect
 
     @pytest.mark.parametrize(("cmd", "allow_empty"), (
