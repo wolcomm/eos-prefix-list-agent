@@ -17,6 +17,8 @@ import time
 
 import pytest
 
+from rptk_stub import RptkStubProcess
+
 
 @pytest.fixture(scope="module")
 def node():
@@ -36,18 +38,43 @@ def node():
     return node
 
 
-@pytest.fixture()
-def configure(node):
+@pytest.fixture(scope="module")
+def configure_daemon(node):
     """Configure the agent as an EOS ProcMgr daemon."""
     agent_config = [
         "trace PrefixListAgent-PrefixListAgent setting PrefixList*/*",
         "daemon PrefixListAgent",
         "exec /root/bin/PrefixListAgent",
-        "option rptk_endpoint value http://localhost:8080/",
+        "option rptk_endpoint value http://127.0.0.1:8000/",
         "option refresh_interval value 10",
         "no shutdown"
     ]
     node.config(agent_config)
     time.sleep(3)
     yield
-    node.config("no daemon PrefixListAgent")
+    # node.config("no daemon PrefixListAgent")
+
+
+@pytest.fixture()
+def configure_prefix_lists(node):
+    """Configure test prefix-lists."""
+    prefix_list_config = [
+        "ip prefix-list AS-BAR source file:/tmp/prefix-lists/test/as-bar-4",
+        "ip prefix-list AS-FOO source file:/tmp/prefix-lists/test/as-foo-4",
+        "ipv6 prefix-list AS-BAR source file:/tmp/prefix-lists/test/as-bar-6",
+        "ipv6 prefix-list AS-FOO source file:/tmp/prefix-lists/test/as-foo-6"
+    ]
+    node.config(prefix_list_config)
+    time.sleep(3)
+    yield
+    node.config(["no {}".format(cmd) for cmd in prefix_list_config])
+
+
+@pytest.fixture(scope="module")
+def rptk_stub():
+    """Launch a stub version of an rptk web application."""
+    process = RptkStubProcess()
+    process.start()
+    yield
+    process.terminate()
+    process.join()

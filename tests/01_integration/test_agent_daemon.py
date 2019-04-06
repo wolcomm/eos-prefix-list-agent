@@ -13,13 +13,15 @@
 
 from __future__ import print_function
 
+import time
+
 import pytest
 
 
 NAME = "PrefixListAgent"
 
 
-@pytest.mark.usefixtures(u"configure")
+@pytest.mark.usefixtures("configure_daemon", "rptk_stub")
 class TestPrefixListAgentDaemon(object):
     """Integration test cases for PrefixListAgent."""
 
@@ -31,3 +33,12 @@ class TestPrefixListAgentDaemon(object):
         assert status[NAME]["isSdkAgent"]
         assert status[NAME]["enabled"]
         assert status[NAME]["running"]
+
+    # @pytest.mark.usefixtures("configure_prefix_lists")
+    def test_prefix_lists(self, node):
+        """Test prefix-list creation."""
+        time.sleep(15)
+        resp = node.enable(["show ip prefix-list", "show ipv6 prefix-list"])
+        print(resp)
+        resp = node.enable("show daemon {}".format(NAME))
+        print(resp)
