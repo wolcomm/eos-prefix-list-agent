@@ -6,7 +6,6 @@ services:
 - docker
 env:
   global:
-  - PIP_PREFIX="${VIRTUAL_ENV}"
   - AZURE_ACR_URI="workonline.azurecr.io"
   - AZURE_ACR_APPID="99d33495-51d7-4c2e-bb15-70f33ba25587"
   # AZURE_ACR_PASSWD=
@@ -18,6 +17,7 @@ env:
 matrix:
   fast_finish: true
 before_install:
+- export PIP_PREFIX="${VIRTUAL_ENV}"
 - pip install --upgrade pip setuptools codecov
 - echo -n "${AZURE_ACR_PASSWD}" | docker login --username "${AZURE_ACR_APPID}" --password-stdin "${AZURE_ACR_URI}"
 install:
