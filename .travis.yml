@@ -6,7 +6,7 @@ services:
 - docker
 env:
   global:
-  - PIP_ISOLATED=true
+  - PIP_PREFIX="${VIRTUAL_ENV}"
   - AZURE_ACR_URI="workonline.azurecr.io"
   - AZURE_ACR_APPID="99d33495-51d7-4c2e-bb15-70f33ba25587"
   # AZURE_ACR_PASSWD=
