@@ -1,5 +1,5 @@
 <!--description: An EOS agent to dynamically update IRR based prefix-lists -->
-[![PyPI](https://img.shields.io/pypi/v/prefix-list-agent.svg)](https://pypi.python.org/pypi/prefix-list-agent.svg)
+[![PyPI](https://img.shields.io/pypi/v/prefix-list-agent.svg)](https://pypi.python.org/pypi/prefix-list-agent)
 [![Build Status](https://travis-ci.com/wolcomm/eos-prefix-list-agent.svg?branch=master)](https://travis-ci.com/wolcomm/eos-prefix-list-agent)
 [![codecov](https://codecov.io/gh/wolcomm/eos-prefix-list-agent/branch/master/graph/badge.svg)](https://codecov.io/gh/wolcomm/eos-prefix-list-agent)
 
