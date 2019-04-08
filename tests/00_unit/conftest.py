@@ -104,6 +104,7 @@ def agent(sdk, mocker):
         if cls.__module__ == "eossdk":
             mocker.patch("eossdk.{}".format(cls.__name__), autospec=True)
     agent = PrefixListAgent(sdk)
+    agent.rptk_endpoint = "https://example.com"
     return agent
 
 

@@ -40,8 +40,8 @@ class TestPrefixListAgent(object):
 
     def test_property_rptk_endpoint(self, agent):
         """Test 'rptk_endpoint' getter and setter."""
-        assert agent.rptk_endpoint == "https://irr.wolcomm.net"
-        test_value = "https://example.com"
+        assert agent.rptk_endpoint == "https://example.com"
+        test_value = "https://example.net"
         agent.rptk_endpoint = test_value
         assert agent.rptk_endpoint == test_value
 
@@ -54,7 +54,7 @@ class TestPrefixListAgent(object):
 
     def test_property_refresh_interval(self, agent):
         """Test 'refresh_interval' getter and setter."""
-        assert agent.refresh_interval == 10
+        assert agent.refresh_interval == 3600
         test_value = 60
         agent.refresh_interval = test_value
         assert agent.refresh_interval == test_value

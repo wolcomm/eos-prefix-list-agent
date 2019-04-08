@@ -70,9 +70,9 @@ class PrefixListAgent(PrefixListBase, eossdk.AgentHandler,
         self.worker = None
         self.watching = set()
         # set default confg options
-        self._rptk_endpoint = "https://irr.wolcomm.net"
+        self._rptk_endpoint = None
         self._source_dir = "/tmp/prefix-lists"
-        self._refresh_interval = 10
+        self._refresh_interval = 3600
         # create state containers
         self._status = None
         self._last_start = None
