@@ -15,18 +15,21 @@
 from __future__ import print_function
 from __future__ import unicode_literals
 
-__version__ = "0.1.0rc2"
+__version__ = "0.1.0rc3"
 __author__ = "Ben Maddison"
 __author_email__ = "benm@workonline.africa"
 __licence__ = "MIT"
 __copyright__ = "Copyright (c) 2019 Workonline Communications (Pty) Ltd"
 __url__ = "https://github.com/wolcomm/eos-prefix-list-agent"
 __classifiers__ = [
-    'Development Status :: 4 - Beta',
-    'Intended Audience :: Developers',
-    'License :: OSI Approved :: MIT License',
-    'Topic :: Software Development :: Libraries :: Python Modules',
-    'Topic :: Internet',
+    "Development Status :: 4 - Beta",
+    "Environment :: Other Environment",
+    "Intended Audience :: Telecommunications Industry",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Other",
+    "Programming Language :: Python :: 2.7",
+    "Topic :: Internet",
+    "Topic :: System :: Networking"
 ]
 __entry_points__ = None
 __scripts__ = [
