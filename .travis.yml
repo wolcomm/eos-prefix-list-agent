@@ -17,7 +17,7 @@ env:
 matrix:
   fast_finish: true
 before_install:
-- pip install --upgrade pip setuptools codecov
+- sudo pip install --upgrade pip setuptools codecov
 - echo -n "${AZURE_ACR_PASSWD}" | docker login --username "${AZURE_ACR_APPID}" --password-stdin "${AZURE_ACR_URI}"
 install:
 - IMAGE_ID="$(docker build --build-arg REGISTRY="${AZURE_ACR_URI}" --build-arg VERSION="${CEOS_VERSION}" --quiet .)"
