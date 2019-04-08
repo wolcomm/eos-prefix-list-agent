@@ -52,22 +52,6 @@ def configure_daemon(node):
     node.config(agent_config)
     time.sleep(3)
     yield
-    # node.config("no daemon PrefixListAgent")
-
-
-@pytest.fixture()
-def configure_prefix_lists(node):
-    """Configure test prefix-lists."""
-    prefix_list_config = [
-        "ip prefix-list AS-BAR source file:/tmp/prefix-lists/test/as-bar-4",
-        "ip prefix-list AS-FOO source file:/tmp/prefix-lists/test/as-foo-4",
-        "ipv6 prefix-list AS-BAR source file:/tmp/prefix-lists/test/as-bar-6",
-        "ipv6 prefix-list AS-FOO source file:/tmp/prefix-lists/test/as-foo-6"
-    ]
-    node.config(prefix_list_config)
-    time.sleep(3)
-    yield
-    node.config(["no {}".format(cmd) for cmd in prefix_list_config])
 
 
 @pytest.fixture(scope="module")

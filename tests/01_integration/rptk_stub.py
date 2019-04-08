@@ -47,13 +47,22 @@ class RptkStub(gunicorn.app.base.BaseApplication):
         }
     }
 
+    def __init__(self, **kwargs):
+        """Initialise the uwsgi app."""
+        self.opts = kwargs
+        super(RptkStub, self).__init__()
+
     def load(self):
         """Load the uwsgi app."""
         return self.app
 
     def load_config(self):
-        """No-op."""
-        return
+        """Set config options."""
+        for key, value in self.opts.items():
+            try:
+                self.cfg.set(key.lower(), value)
+            except Exception as e:
+                print(e)
 
     def run(self, *args, **kwargs):
         """Run the server."""
@@ -85,7 +94,8 @@ class RptkStubProcess(multiprocessing.Process):
 
     def run(self):
         """Run the stub server."""
-        server = RptkStub()
+        sys.argv = [sys.executable]
+        server = RptkStub(loglevel="warning")
         server.run()
 
 
