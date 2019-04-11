@@ -13,6 +13,7 @@ env:
   matrix:
   - CEOS_VERSION="4.21.0F"
   - CEOS_VERSION="4.21.2F"
+  - CEOS_VERSION="4.21.5F"
   - CEOS_VERSION="latest"
 matrix:
   fast_finish: true
