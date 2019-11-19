@@ -17,6 +17,7 @@ import collections
 import datetime
 import filecmp
 import os
+import platform
 import shutil
 import signal
 import tempfile
@@ -38,7 +39,14 @@ class PrefixListAgent(PrefixListBase, eossdk.AgentHandler,
     def set_sysdb_mp(cls, name):
         """Create the SysdbMountProfiles file for the agent."""
         # set the path
-        profile_path = os.path.join("/usr/lib/SysdbMountProfiles", name)
+        arch = platform.architecture()[0]
+        if arch == "32bit":
+            lib_dir = "/usr/lib"
+        elif arch == "64bit":
+            lib_dir = "/usr/lib64"
+        else:
+            raise RuntimeError("Unknown architecture '{}'".format(arch))
+        profile_path = os.path.join(lib_dir, "SysdbMountProfiles", name)
         # get a tempfile for writing the profile to
         with tempfile.NamedTemporaryFile() as tmp:
             # write the profile file
