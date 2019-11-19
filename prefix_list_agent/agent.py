@@ -42,9 +42,9 @@ class PrefixListAgent(PrefixListBase, eossdk.AgentHandler,
         arch = platform.architecture()[0]
         if arch == "32bit":
             lib_dir = "/usr/lib"
-        elif arch == "64bit":
+        elif arch == "64bit":   # pragma: no cover
             lib_dir = "/usr/lib64"
-        else:
+        else:  # pragma: no cover
             raise RuntimeError("Unknown architecture '{}'".format(arch))
         profile_path = os.path.join(lib_dir, "SysdbMountProfiles", name)
         # get a tempfile for writing the profile to
