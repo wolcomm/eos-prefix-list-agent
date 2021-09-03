@@ -69,7 +69,7 @@ class TestPrefixListAgentDaemon(object):
                                    encoding="text")
                 output = resp[0]["result"]["output"]
                 entries = [m.groupdict() for m in
-                           [entry_regexp.match(l) for l in output.splitlines()]
+                           [entry_regexp.match(l) for l in output.splitlines()] #noqa E741
                            if m is not None]
                 assert len(entries) == len(data[afi])
                 for item in data[afi]:

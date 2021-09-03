@@ -33,14 +33,15 @@ class PrefixListAgent(PrefixListBase, eossdk.AgentHandler,
     """An EOS SDK based agent that creates prefix-list policy objects."""
 
     sysdb_mounts = ("agent",)
-    agent_options = ("rptk_endpoint", "source_dir", "refresh_interval")
+    agent_options = ("rptk_endpoint", "source_dir", "refresh_interval",
+                     "update_delay")
 
     @classmethod
     def set_sysdb_mp(cls, name):
         """Create the SysdbMountProfiles file for the agent."""
         # set the path
         arch = platform.architecture()[0]
-        if arch == "32bit":
+        if arch == "32bit":     # pragma: no cover
             lib_dir = "/usr/lib"
         elif arch == "64bit":   # pragma: no cover
             lib_dir = "/usr/lib64"
@@ -81,6 +82,7 @@ class PrefixListAgent(PrefixListBase, eossdk.AgentHandler,
         self._rptk_endpoint = None
         self._source_dir = "/tmp/prefix-lists"
         self._refresh_interval = 3600
+        # self._update_delay = None
         # create state containers
         self._status = None
         self._last_start = None
@@ -120,6 +122,20 @@ class PrefixListAgent(PrefixListBase, eossdk.AgentHandler,
             self._refresh_interval = i
         else:
             raise ValueError("refresh_interval must be in range 1 - 86399")
+
+    # @property
+    # def update_delay(self):
+        # """Get 'update_delay' property."""
+        # return self._update_delay
+
+    # @update_delay.setter
+    # def update_delay(self, i):
+    #     """Set 'update_delay' property."""
+    #     i = int(i)
+    #     if i in range(1, 120):
+    #         self._update_delay = i
+    #     else:
+    #         raise ValueError("update_delay must be in range 1 - 120")
 
     @property
     def status(self):
@@ -220,7 +236,7 @@ class PrefixListAgent(PrefixListBase, eossdk.AgentHandler,
                 self.err("Starting worker failed: {}".format(e))
                 self.failure(err=e)
         else:
-            self.warning("'rptk_endpoint' is not set"
+            self.warning("'rptk_endpoint' {} is not set"
                          .format(self.rptk_endpoint))
             self.sleep()
 
@@ -315,6 +331,11 @@ class PrefixListAgent(PrefixListBase, eossdk.AgentHandler,
         """Go to sleep for 'refresh_interval' seconds."""
         self.status = "sleeping"
         self.timeout_time_is(eossdk.now() + self.refresh_interval)
+
+    # def update_delay(self):
+        # """Go to sleep for 'update_delay' seconds."""
+        # self.status = "sleeping"
+        # self.timeout_time_is(eossdk.now() + self.update_delay)
 
     def shutdown(self):
         """Shutdown the agent gracefully."""

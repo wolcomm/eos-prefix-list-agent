@@ -46,6 +46,7 @@ class DummySdk(object):
         test_options = {"rptk_endpoint": "https://example.com",
                         "source_dir": "/foo/bar",
                         "refresh_interval": 60,
+                        # "update_delay": None,
                         "bad_option": None}
 
         def agent_option_iter():
