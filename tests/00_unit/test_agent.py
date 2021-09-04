@@ -65,14 +65,14 @@ class TestPrefixListAgent(object):
 
     def test_property_update_delay(self, agent):
         """Test 'update_delay' getter and setter."""
-        assert agent.update_delay == 120
-        test_value = 60
-        agent.refresh_interval = test_value
-        assert agent.refresh_interval == test_value
-        for fail_value in ("x", 5, 100000):
+        assert agent.update_delay is None
+        test_value = 5
+        agent.update_delay = test_value
+        assert agent.update_delay == test_value
+        for fail_value in ("x", 0, 100000):
             with pytest.raises(ValueError):
-                agent.refresh_interval = fail_value
-        assert agent.refresh_interval == test_value
+                agent.update_delay = fail_value
+        assert agent.update_delay == test_value
 
     def test_property_status(self, agent):
         """Test 'status' getter and setter."""
@@ -109,6 +109,7 @@ class TestPrefixListAgent(object):
         ("rptk_endpoint", "https://x.com"),
         ("source_dir", "/foo/bar"),
         ("refresh_interval", 60),
+        ("update_delay", 30),
         ("bad_option", None)
     ))
     def test_set(self, agent, mocker, key, value):
@@ -177,7 +178,8 @@ class TestPrefixListAgent(object):
         mock_worker.return_value.data = stats
         agent.worker = mock_worker(endpoint=agent.rptk_endpoint,
                                    path=agent.source_dir,
-                                   eapi=agent.eapi_mgr)
+                                   eapi=agent.eapi_mgr,
+                                   update_delay=agent.update_delay)
         agent.success()
         agent.report.assert_called_once_with(**stats)
         agent.cleanup.assert_called_once_with(process=agent.worker)
@@ -196,7 +198,8 @@ class TestPrefixListAgent(object):
         mock_worker.return_value.error = worker_err
         agent.worker = mock_worker(endpoint=agent.rptk_endpoint,
                                    path=agent.source_dir,
-                                   eapi=agent.eapi_mgr)
+                                   eapi=agent.eapi_mgr,
+                                   update_delay=agent.update_delay)
         if worker_process:
             process = agent.worker
         else:
@@ -321,7 +324,8 @@ class TestPrefixListAgent(object):
             mocker.patch.object(agent, method, autospec=True)
         agent.worker = mock_worker(endpoint=agent.rptk_endpoint,
                                    path=agent.source_dir,
-                                   eapi=agent.eapi_mgr)
+                                   eapi=agent.eapi_mgr,
+                                   update_delay=agent.update_delay)
         agent.on_readable(fd)
         if fd == 1:
             agent.success.assert_called_once_with()

@@ -114,7 +114,8 @@ def worker(agent):
     """Provide a PrefixListWorker instance from a mocked agent."""
     worker = PrefixListWorker(endpoint=agent.rptk_endpoint,
                               path=agent.source_dir,
-                              eapi=agent.eapi_mgr)
+                              eapi=agent.eapi_mgr,
+                              update_delay=agent.update_delay)
     return worker
 
 

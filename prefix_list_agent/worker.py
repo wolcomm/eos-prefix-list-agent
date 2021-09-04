@@ -20,6 +20,7 @@ import os
 import re
 import signal
 import sys
+import time
 import urllib2
 
 from prefix_list_agent.base import PrefixListBase
@@ -29,13 +30,14 @@ from prefix_list_agent.exceptions import handle_sigterm, TermException
 class PrefixListWorker(multiprocessing.Process, PrefixListBase):
     """Worker to fetch and process IRR data."""
 
-    def __init__(self, endpoint, path, eapi, *args, **kwargs):
+    def __init__(self, endpoint, path, eapi, update_delay, *args, **kwargs):
         """Initialise an PrefixListWorker instance."""
         super(PrefixListWorker, self).__init__(*args, **kwargs)
         PrefixListBase.__init__(self)
         self.endpoint = endpoint
         self.path = path
         self.eapi = eapi
+        self.update_delay = update_delay
         self.path_re = re.compile(r"^file:{}/(?P<policy>\w+)/(?P<file>[-.:\w]+)$"  # noqa: E501
                                   .format(self.path.rstrip("/")))
         self._p_err, self._c_err = multiprocessing.Pipe(duplex=False)
@@ -114,16 +116,26 @@ class PrefixListWorker(multiprocessing.Process, PrefixListBase):
                     self.debug("No match")
         return configured
 
-    def refresh_all(self):
+    def refresh_all(self, configured):
         """Refresh prefix-lists."""
         self.info("Refreshing source-based prefix-lists")
         for afi in ("ip", "ipv6"):
-            cmd = "refresh {} prefix-list".format(afi)
-            messages = self.eapi_request(cmd, result_node="messages",
-                                         allow_empty=True)
-            for msg in messages:
-                for submsg in msg.replace("\nNum", " -").rstrip().split("\n"):
-                    self.info(submsg)
+            if self.update_delay is None:
+                cmd = "refresh {} prefix-list".format(afi)
+                messages = self.eapi_request(cmd, result_node="messages",
+                                             allow_empty=True)
+                for msg in messages:
+                    for submsg in msg.replace("\nNum", " -").rstrip().split("\n"):
+                        self.info(submsg)
+            else:
+                for prefix_list in configured:
+                    cmd = "refresh {} prefix-list {}".format(afi, prefix_list)
+                    messages = self.eapi_request(cmd, result_node="messages",
+                                                 allow_empty=True)
+                    for msg in messages:
+                        for submsg in msg.replace("\nNum", " -").rstrip().split("\n"):
+                            self.info(submsg)
+                    time.sleep(self.update_delay)
         self.notice("Prefix-lists refreshed successfully")
 
     def get_policies(self):
@@ -176,6 +188,7 @@ class PrefixListWorker(multiprocessing.Process, PrefixListBase):
         self.debug("Got prefix data")
         return result
 
+    # TODO: include list of written prefix-lists, to give to 'refresh_all()'
     def write_results(self, configured, data):
         """Write prefix-list data to files."""
         stats = {"succeeded": 0, "failed": 0}

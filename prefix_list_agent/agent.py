@@ -43,7 +43,7 @@ class PrefixListAgent(PrefixListBase, eossdk.AgentHandler,
         arch = platform.architecture()[0]
         if arch == "32bit":     # pragma: no cover
             lib_dir = "/usr/lib"
-        elif arch == "64bit":   # pragma: no cover
+        elif arch == "64bit":
             lib_dir = "/usr/lib64"
         else:  # pragma: no cover
             raise RuntimeError("Unknown architecture '{}'".format(arch))
@@ -82,7 +82,7 @@ class PrefixListAgent(PrefixListBase, eossdk.AgentHandler,
         self._rptk_endpoint = None
         self._source_dir = "/tmp/prefix-lists"
         self._refresh_interval = 3600
-        self._update_delay = 0
+        self._update_delay = None
         # create state containers
         self._status = None
         self._last_start = None
@@ -132,10 +132,10 @@ class PrefixListAgent(PrefixListBase, eossdk.AgentHandler,
     def update_delay(self, i):
         """Set 'update_delay' property."""
         i = int(i)
-        if i in range(0, 120):
+        if i in range(1, 121):
             self._update_delay = i
         else:
-            raise ValueError("update_delay must be in range 0 - 120")
+            raise ValueError("update_delay must be in range 1 - 120")
 
     @property
     def status(self):
@@ -226,7 +226,8 @@ class PrefixListAgent(PrefixListBase, eossdk.AgentHandler,
                 self.info("Initialising worker")
                 self.worker = PrefixListWorker(endpoint=self.rptk_endpoint,
                                                path=self.source_dir,
-                                               eapi=self.eapi_mgr)
+                                               eapi=self.eapi_mgr,
+                                               update_delay=self.update_delay)
                 self.watch(self.worker.p_data, "result")
                 self.watch(self.worker.p_err, "error")
                 self.info("Starting worker")
@@ -236,8 +237,7 @@ class PrefixListAgent(PrefixListBase, eossdk.AgentHandler,
                 self.err("Starting worker failed: {}".format(e))
                 self.failure(err=e)
         else:
-            self.warning("'rptk_endpoint' {} is not set"
-                         .format(self.rptk_endpoint))
+            self.warning("'rptk_endpoint' is not set")
             self.sleep()
 
     def watch(self, conn, type):
@@ -331,11 +331,6 @@ class PrefixListAgent(PrefixListBase, eossdk.AgentHandler,
         """Go to sleep for 'refresh_interval' seconds."""
         self.status = "sleeping"
         self.timeout_time_is(eossdk.now() + self.refresh_interval)
-
-    def update_delay(self):
-        """Go to sleep for 'update_delay' seconds."""
-        self.status = "sleeping"
-        self.timeout_time_is(eossdk.now() + self.update_delay)
 
     def shutdown(self):
         """Shutdown the agent gracefully."""
