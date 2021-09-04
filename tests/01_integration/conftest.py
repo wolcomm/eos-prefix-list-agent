@@ -47,7 +47,7 @@ def configure_daemon(node):
         "exec /root/bin/PrefixListAgent",
         "option rptk_endpoint value http://127.0.0.1:8000/",
         "option refresh_interval value 10",
-        # "option update_delay value 60",
+        "option update_delay value 60",
         "no shutdown"
     ]
     node.config(agent_config)

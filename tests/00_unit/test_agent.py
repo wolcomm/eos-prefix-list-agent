@@ -63,6 +63,17 @@ class TestPrefixListAgent(object):
                 agent.refresh_interval = fail_value
         assert agent.refresh_interval == test_value
 
+    def test_property_update_delay(self, agent):
+        """Test 'update_delay' getter and setter."""
+        assert agent.update_delay == 120
+        test_value = 60
+        agent.refresh_interval = test_value
+        assert agent.refresh_interval == test_value
+        for fail_value in ("x", 5, 100000):
+            with pytest.raises(ValueError):
+                agent.refresh_interval = fail_value
+        assert agent.refresh_interval == test_value
+
     def test_property_status(self, agent):
         """Test 'status' getter and setter."""
         assert agent.status is None
@@ -92,7 +103,7 @@ class TestPrefixListAgent(object):
         """Test 'configure' method."""
         agent.configure()
         agent.agent_mgr.agent_option_iter.assert_called_once()
-        assert agent.agent_mgr.agent_option.call_count == 4
+        assert agent.agent_mgr.agent_option.call_count == 5
 
     @pytest.mark.parametrize(("key", "value"), (
         ("rptk_endpoint", "https://x.com"),

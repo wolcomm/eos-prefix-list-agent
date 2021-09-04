@@ -82,7 +82,7 @@ class PrefixListAgent(PrefixListBase, eossdk.AgentHandler,
         self._rptk_endpoint = None
         self._source_dir = "/tmp/prefix-lists"
         self._refresh_interval = 3600
-        # self._update_delay = None
+        self._update_delay = 0
         # create state containers
         self._status = None
         self._last_start = None
@@ -123,19 +123,19 @@ class PrefixListAgent(PrefixListBase, eossdk.AgentHandler,
         else:
             raise ValueError("refresh_interval must be in range 1 - 86399")
 
-    # @property
-    # def update_delay(self):
-        # """Get 'update_delay' property."""
-        # return self._update_delay
+    @property
+    def update_delay(self):
+        """Get 'update_delay' property."""
+        return self._update_delay
 
-    # @update_delay.setter
-    # def update_delay(self, i):
-    #     """Set 'update_delay' property."""
-    #     i = int(i)
-    #     if i in range(1, 120):
-    #         self._update_delay = i
-    #     else:
-    #         raise ValueError("update_delay must be in range 1 - 120")
+    @update_delay.setter
+    def update_delay(self, i):
+        """Set 'update_delay' property."""
+        i = int(i)
+        if i in range(0, 120):
+            self._update_delay = i
+        else:
+            raise ValueError("update_delay must be in range 0 - 120")
 
     @property
     def status(self):
@@ -332,10 +332,10 @@ class PrefixListAgent(PrefixListBase, eossdk.AgentHandler,
         self.status = "sleeping"
         self.timeout_time_is(eossdk.now() + self.refresh_interval)
 
-    # def update_delay(self):
-        # """Go to sleep for 'update_delay' seconds."""
-        # self.status = "sleeping"
-        # self.timeout_time_is(eossdk.now() + self.update_delay)
+    def update_delay(self):
+        """Go to sleep for 'update_delay' seconds."""
+        self.status = "sleeping"
+        self.timeout_time_is(eossdk.now() + self.update_delay)
 
     def shutdown(self):
         """Shutdown the agent gracefully."""
