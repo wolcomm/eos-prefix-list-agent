@@ -89,7 +89,7 @@ class TestPrefixListWorker(object):
         assert configured == expect
 
     def test_refresh_all(self, worker):
-        """Test case for 'refrech_all' method."""
+        """Test case for 'refresh_all' method."""
         worker.refresh_all()
         assert worker.eapi.run_show_cmd.call_count == 2
 

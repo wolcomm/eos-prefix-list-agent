@@ -72,7 +72,7 @@ class PrefixListWorker(multiprocessing.Process, PrefixListBase):
             configured = self.get_configured(policies)
             data = self.get_data(configured)
             stats = self.write_results(configured, data)
-            self.refresh_all()
+            self.refresh_all(configured)
             self.c_data.send(stats)
         except TermException:
             self.notice("Got SIGTERM signal: exiting.")
@@ -125,7 +125,7 @@ class PrefixListWorker(multiprocessing.Process, PrefixListBase):
                 messages = self.eapi_request(cmd, result_node="messages",
                                              allow_empty=True)
                 for msg in messages:
-                    for submsg in msg.replace("\nNum", " -").rstrip().split("\n"):
+                    for submsg in msg.replace("\nNum", " -").rstrip().split("\n"): # noqa: E501
                         self.info(submsg)
             else:
                 for prefix_list in configured:
@@ -133,7 +133,7 @@ class PrefixListWorker(multiprocessing.Process, PrefixListBase):
                     messages = self.eapi_request(cmd, result_node="messages",
                                                  allow_empty=True)
                     for msg in messages:
-                        for submsg in msg.replace("\nNum", " -").rstrip().split("\n"):
+                        for submsg in msg.replace("\nNum", " -").rstrip().split("\n"): # noqa: E501
                             self.info(submsg)
                     time.sleep(self.update_delay)
         self.notice("Prefix-lists refreshed successfully")
