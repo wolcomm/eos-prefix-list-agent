@@ -90,8 +90,9 @@ class TestPrefixListWorker(object):
 
     def test_refresh_all(self, worker):
         """Test case for 'refresh_all' method."""
-        worker.refresh_all()
-        assert worker.eapi.run_show_cmd.call_count == 2
+        configured = worker.get_configured(["strict"])
+        worker.refresh_all(configured)
+        assert worker.eapi.run_show_cmd.call_count == 4
 
     def test_get_policies(self, worker, mocker):
         """Test case for 'get_policies' method."""
