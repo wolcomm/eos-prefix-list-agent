@@ -71,8 +71,8 @@ class PrefixListWorker(multiprocessing.Process, PrefixListBase):
             policies = self.get_policies()
             configured = self.get_configured(policies)
             data = self.get_data(configured)
-            stats = self.write_results(configured, data)
-            self.refresh_all(configured)
+            stats, written_objs = self.write_results(configured, data)
+            self.refresh_all(written_objs)
             self.c_data.send(stats)
         except TermException:
             self.notice("Got SIGTERM signal: exiting.")
@@ -116,7 +116,7 @@ class PrefixListWorker(multiprocessing.Process, PrefixListBase):
                     self.debug("No match")
         return configured
 
-    def refresh_all(self, configured):
+    def refresh_all(self, written_objs):
         """Refresh prefix-lists."""
         self.info("Refreshing source-based prefix-lists")
         for afi in ("ip", "ipv6"):
@@ -128,7 +128,7 @@ class PrefixListWorker(multiprocessing.Process, PrefixListBase):
                     for submsg in msg.replace("\nNum", " -").rstrip().split("\n"): # noqa: E501
                         self.info(submsg)
             else:
-                for prefix_list in configured:
+                for prefix_list in written_objs:
                     cmd = "refresh {} prefix-list {}".format(afi, prefix_list)
                     messages = self.eapi_request(cmd, result_node="messages",
                                                  allow_empty=True)
@@ -192,6 +192,7 @@ class PrefixListWorker(multiprocessing.Process, PrefixListBase):
     def write_results(self, configured, data):
         """Write prefix-list data to files."""
         stats = {"succeeded": 0, "failed": 0}
+        written_objs = list()
         for policy, objs in configured.items():
             self.info("Writing files for policy {}".format(policy))
             if not objs:
@@ -214,11 +215,12 @@ class PrefixListWorker(multiprocessing.Process, PrefixListBase):
                             stats["failed"] += 1
                             continue
                         stats["succeeded"] += 1
+                        written_objs.append(obj)
                 else:
                     self.warning("No prefix data for {}/{}"
                                  .format(obj, policy))
                     stats["failed"] += len(config)
-        return stats
+        return stats, written_objs
 
     def write_prefix_list(self, path, entries, afi):
         """Write prefix-list to file."""
