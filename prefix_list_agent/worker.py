@@ -215,7 +215,7 @@ class PrefixListWorker(multiprocessing.Process, PrefixListBase):
                             stats["failed"] += 1
                             continue
                         stats["succeeded"] += 1
-                        written_objs.append(obj)
+                    written_objs.append(obj)
                 else:
                     self.warning("No prefix data for {}/{}"
                                  .format(obj, policy))
