@@ -192,7 +192,7 @@ class PrefixListWorker(multiprocessing.Process, PrefixListBase):
     def write_results(self, configured, data):
         """Write prefix-list data to files."""
         stats = {"succeeded": 0, "failed": 0}
-        written_objs = list()
+        written_objs = set()
         for policy, objs in configured.items():
             self.info("Writing files for policy {}".format(policy))
             if not objs:
@@ -215,7 +215,7 @@ class PrefixListWorker(multiprocessing.Process, PrefixListBase):
                             stats["failed"] += 1
                             continue
                         stats["succeeded"] += 1
-                    written_objs.append(obj)
+                        written_objs.add(obj)
                 else:
                     self.warning("No prefix data for {}/{}"
                                  .format(obj, policy))
