@@ -166,9 +166,10 @@ class TestPrefixListWorker(object):
     def test_write_results(self, worker, mocker, configured, data):
         """Test case for 'write_results' method."""
         mocker.patch("__builtin__.open", mocker.mock_open())
-        stats = worker.write_results(configured, data)
+        stats, written_objs = worker.write_results(configured, data)
         assert stats["succeeded"] == 2
         assert stats["failed"] == 2
+        assert len(written_objs) > 0
 
     @pytest.mark.parametrize(("entries", "side_effect"), (
         ([], None),
