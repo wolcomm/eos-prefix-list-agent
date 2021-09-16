@@ -55,7 +55,7 @@ class TestPrefixListAgentDaemon(object):
                 "ipv6": []
             }
         }
-        time.sleep(60)
+        time.sleep(15)
         responses = node.enable(["show {} prefix-list".format(config_af)
                                  for config_af in ("ip", "ipv6")])
         entry_pattern = r"^\s+seq \d+ permit (?P<p>[\w.:/]+)( ge (?P<ge>\d+))?( le (?P<le>\d+))?$"  # noqa: E501

@@ -33,7 +33,7 @@ class TestPrefixListWorker(object):
         assert isinstance(worker, PrefixListWorker)
 
     @pytest.mark.parametrize(("case", "side_effect"), (
-        ("success", ({"foo": "bar"},)),
+        ("success", (({"foo": "bar"}, set()),)),
         ("sigterm", TermException),
         ("error", StandardError),
     ))
@@ -55,7 +55,7 @@ class TestPrefixListWorker(object):
             raise ValueError(case)
 
     @pytest.mark.parametrize(("case", "side_effect"), (
-        ("success", ({"foo": "bar"},)),
+        ("success", (({"foo": "bar"}, set()),)),
         ("sigterm", TermException),
         ("error", StandardError),
     ))
@@ -169,7 +169,7 @@ class TestPrefixListWorker(object):
         stats, written_objs = worker.write_results(configured, data)
         assert stats["succeeded"] == 2
         assert stats["failed"] == 2
-        assert len(written_objs) > 0
+        assert len(written_objs) == 1
 
     @pytest.mark.parametrize(("entries", "side_effect"), (
         ([], None),
