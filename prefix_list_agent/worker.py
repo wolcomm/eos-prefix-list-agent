@@ -116,25 +116,26 @@ class PrefixListWorker(multiprocessing.Process, PrefixListBase):
                     self.debug("No match")
         return configured
 
+    def refresh_prefix_list(self, afi, prefix_list=None):
+        """Refresh all prefix-lists or a single named prefix-list."""
+        cmd = "refresh {} prefix-list".format(afi)
+        if prefix_list is not None:
+            cmd += " {}".format(prefix_list)
+        messages = self.eapi_request(cmd, result_node="messages",
+                                     allow_empty=True)
+        for msg in messages:
+            for submsg in msg.replace("\nNum", " -").rstrip().split("\n"):
+                self.info(submsg)
+
     def refresh_all(self, written_objs):
         """Refresh prefix-lists."""
         self.info("Refreshing source-based prefix-lists")
         for afi in ("ip", "ipv6"):
             if self.update_delay is None:
-                cmd = "refresh {} prefix-list".format(afi)
-                messages = self.eapi_request(cmd, result_node="messages",
-                                             allow_empty=True)
-                for msg in messages:
-                    for submsg in msg.replace("\nNum", " -").rstrip().split("\n"): # noqa: E501
-                        self.info(submsg)
+                self.refresh_prefix_list(afi)
             else:
                 for prefix_list in written_objs:
-                    cmd = "refresh {} prefix-list {}".format(afi, prefix_list)
-                    messages = self.eapi_request(cmd, result_node="messages",
-                                                 allow_empty=True)
-                    for msg in messages:
-                        for submsg in msg.replace("\nNum", " -").rstrip().split("\n"): # noqa: E501
-                            self.info(submsg)
+                    self.refresh_prefix_list(afi, prefix_list)
                     time.sleep(self.update_delay)
         self.notice("Prefix-lists refreshed successfully")
 

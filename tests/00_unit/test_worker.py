@@ -18,9 +18,11 @@ import signal
 import StringIO
 import time
 import urllib2
+import datetime
 
 import pytest
 
+from mock import MagicMock
 from prefix_list_agent.exceptions import TermException
 from prefix_list_agent.worker import PrefixListWorker
 
@@ -88,11 +90,32 @@ class TestPrefixListWorker(object):
         assert worker.eapi.run_show_cmd.call_count == 2
         assert configured == expect
 
-    def test_refresh_all(self, worker):
+    def test_refresh_prefix_lists (self, worker, agent, mock):
+        """Test case for 'refresh_prefix_list' method"""
+        if refresh_prefix_list is not None:
+            assert worker.eapi.run_show_cmd.call_count == 2
+        else:
+            assert worker.eapi.run_show_cmd.call_count == 2`
+
+    def test_refresh_all(self, worker, agent, mock):
         """Test case for 'refresh_all' method."""
         configured = worker.get_configured(["strict"])
         worker.refresh_all(configured)
         assert worker.eapi.run_show_cmd.call_count == 4
+
+        def wrapped(*args, **kwargs):
+            t0 = datetime.datetime.utcnow()
+            update_delay(*args, **kwargs)
+            t1 = datetime.datetime.utcnow()
+            delta = t1 - t0
+            m.delta = delta
+            return wrapped
+
+        m = MagicMock()
+        m.side_effect = wrapped(time.sleep, m)
+        with mock.patch.object(time, "sleep", m):
+            refresh_all(update_delay)
+        assert 2.5 <= m.delta.seconds <= 3.5
 
     def test_get_policies(self, worker, mocker):
         """Test case for 'get_policies' method."""
