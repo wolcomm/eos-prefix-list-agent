@@ -97,7 +97,7 @@ class TestPrefixListWorker(object):
         else:
             assert worker.eapi.run_show_cmd.call_count == 2`
 
-    def test_refresh_all(self, worker, agent, mock):
+    def test_refresh_all(self, worker, mocker):
         """Test case for 'refresh_all' method."""
         configured = worker.get_configured(["strict"])
         worker.refresh_all(configured)
@@ -113,9 +113,28 @@ class TestPrefixListWorker(object):
 
         m = MagicMock()
         m.side_effect = wrapped(time.sleep, m)
-        with mock.patch.object(time, "sleep", m):
-            refresh_all(update_delay)
-        assert 2.5 <= m.delta.seconds <= 3.5
+        with mocker.patch.object(time, "sleep", m):
+            refresh_all(worker.update_delay)
+        assert 2.5 <= mocker.delta.seconds <= 3.5
+
+        mocker.reset_mock()
+        test_afi = "ipv4"
+        test_update_delay_value = None
+        agent.update_delay = test_update_delay_value
+        mocker.side_effect = refresh_prefix_list()
+        with mocker.patch.object(worker, "refresh_prefix_list", mocker):
+            refresh_all(agent.update_delay)
+        worker.refresh_prefix_list.assert_called_once_with(test_afi)
+
+        mocker.reset_mock()
+        test_objs = ["AS-FOO", "AS-BAR"]
+        test_update_delay_value = 3
+        agent.update_delay = test_update_delay_value
+        mocker.side_effect = refresh_prefix_list()
+        with mocker.patch.object(worker, "refresh_prefix_list", mocker):
+            refresh_all(agent.update_delay)
+        assert worker.refresh_prefix_list.call_count == len(test_objs)
+        worker.refresh_prefix_list.assert_called_with(test_afi, test_objs)
 
     def test_get_policies(self, worker, mocker):
         """Test case for 'get_policies' method."""
