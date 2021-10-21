@@ -106,7 +106,7 @@ class TestPrefixListWorker(object):
                 delta = t1 - t0
                 m.delta = delta
             return wrapped
-
+        # Test update_delay sleep functionality
         test_objs = ["AS-FOO", "AS-BAR"]
         test_update_delay_value = 3
         m = MagicMock()
@@ -115,23 +115,21 @@ class TestPrefixListWorker(object):
         worker.update_delay = test_update_delay_value
         worker.refresh_all(test_objs)
         assert 2.5 <= m.delta.seconds <= 3.5
-
-#        test_afi = "ipv4"
-#        test_update_delay_value = None
-#        worker.update_delay = test_update_delay_value
-#        mocker.side_effect = refresh_prefix_list()
-#        mocker.patch.object(worker, "refresh_prefix_list", mocker)
-#        worker.refresh_all(test_objs)
-#        worker.refresh_prefix_list.assert_called_once_with(test_afi)
-#
-#        mocker.reset_mock()
-#        test_update_delay_value = 3
-#        worker.update_delay = test_update_delay_value
-#        mocker.side_effect = refresh_prefix_list()
-#        mocker.patch.object(worker, "refresh_prefix_list", mocker)
-#        worker.refresh_all(test_objs)
-#        assert worker.refresh_prefix_list.call_count == len(test_objs)
-#        worker.refresh_prefix_list.assert_called_with(test_afi, test_objs)
+        # Test refresh_prefix_all behavior without update_delay
+        test_afi = "ipv6"
+        test_update_delay_value = None
+        worker.update_delay = test_update_delay_value
+        mocker.patch.object(worker, "refresh_prefix_list")
+        worker.refresh_all(test_objs)
+        assert worker.refresh_prefix_list.call_count == 2
+        worker.refresh_prefix_list.assert_called_with(test_afi)
+        # Test refresh_prefix_all behavior with update_delay
+        worker.refresh_prefix_list.reset_mock()
+        test_update_delay_value = 3
+        worker.update_delay = test_update_delay_value
+        worker.refresh_all(test_objs)
+        assert worker.refresh_prefix_list.call_count == (len(test_objs)*2)
+        worker.refresh_prefix_list.assert_called_with(test_afi, test_objs[1])
 
     def test_get_policies(self, worker, mocker):
         """Test case for 'get_policies' method."""
