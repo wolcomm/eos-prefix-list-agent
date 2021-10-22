@@ -23,7 +23,6 @@ import eossdk
 from _multiprocessing import Connection
 
 from prefix_list_agent.agent import PrefixListAgent
-from prefix_list_agent.worker import PrefixListWorker
 
 
 class DummySdk(object):
@@ -112,11 +111,8 @@ def agent(sdk, mocker):
 @pytest.fixture()
 def worker(agent):
     """Provide a PrefixListWorker instance from a mocked agent."""
-    worker = PrefixListWorker(endpoint=agent.rptk_endpoint,
-                              path=agent.source_dir,
-                              eapi=agent.eapi_mgr,
-                              update_delay=agent.update_delay)
-    return worker
+    agent.init_worker()
+    return agent.worker
 
 
 @pytest.fixture()

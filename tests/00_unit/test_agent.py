@@ -122,6 +122,18 @@ class TestPrefixListAgent(object):
             agent.warning.assert_called_once_with("Ignoring unknown option '{}'"  # noqa: E501
                                                   .format(key))
 
+    @pytest.mark.parametrize(("agent_key", "worker_key", "value"), (
+        ("rptk_endpoint", "endpoint", "https://foo.bar"),
+        ("source_dir", "path", "/quux/baz"),
+        ("update_delay", "update_delay", None),
+        ("update_delay", "update_delay", 15)
+    ))
+    def test_init_worker(self, agent, agent_key, worker_key, value):
+        """Test case for `init_worker` method."""
+        agent.set(agent_key, value)
+        agent.init_worker()
+        assert getattr(agent.worker, worker_key) == value
+
     def test_start(self, agent, mocker):
         """Test case for 'start' method."""
         methods = ("configure", "init", "run")

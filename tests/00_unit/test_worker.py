@@ -90,46 +90,53 @@ class TestPrefixListWorker(object):
         assert worker.eapi.run_show_cmd.call_count == 2
         assert configured == expect
 
-    def test_refresh_prefix_lists(self, worker):
+    @pytest.mark.parametrize(("prefix_list",), ((None,), ("AS-BAZ",)))
+    def test_refresh_prefix_list(self, worker, prefix_list):
         """Test case for 'refresh_prefix_list' method."""
-        test_afi = "ipv4"
-        worker.refresh_prefix_list(test_afi)
+        test_afi = "ip"
+        worker.refresh_prefix_list(test_afi, prefix_list)
         assert worker.eapi.run_show_cmd.call_count == 1
+        cmd = worker.eapi.run_show_cmd.call_args.args[0]
+        assert test_afi in cmd
+        if prefix_list is not None:
+            assert cmd.endswith(prefix_list)
 
-    def test_refresh_all(self, worker, mocker):
+    @pytest.mark.parametrize(("update_delay",), ((None,), (3,)))
+    def test_refresh_all(self, worker, mocker, update_delay):
         """Test case for 'refresh_all' method."""
+        test_objs = ["AS-FOO", "AS-BAR"]
+        test_afi = "ipv6"
+        mocker.patch.object(worker, "refresh_prefix_list")
+
         def func_wrapper(func, m):
+            m.deltas = list()
+
             def wrapped(*args, **kwargs):
                 t0 = datetime.datetime.utcnow()
                 func(*args, **kwargs)
                 t1 = datetime.datetime.utcnow()
                 delta = t1 - t0
-                m.delta = delta
+                m.deltas.append(delta)
             return wrapped
-        # Test update_delay sleep functionality
-        test_objs = ["AS-FOO", "AS-BAR"]
-        test_update_delay_value = 3
         m = MagicMock()
         m.side_effect = func_wrapper(time.sleep, m)
         mocker.patch.object(time, "sleep", m)
-        worker.update_delay = test_update_delay_value
+        worker.update_delay = update_delay
         worker.refresh_all(test_objs)
-        assert 2.5 <= m.delta.seconds <= 3.5
-        # Test refresh_prefix_all behavior without update_delay
-        test_afi = "ipv6"
-        test_update_delay_value = None
-        worker.update_delay = test_update_delay_value
-        mocker.patch.object(worker, "refresh_prefix_list")
-        worker.refresh_all(test_objs)
-        assert worker.refresh_prefix_list.call_count == 2
-        worker.refresh_prefix_list.assert_called_with(test_afi)
-        # Test refresh_prefix_all behavior with update_delay
-        worker.refresh_prefix_list.reset_mock()
-        test_update_delay_value = 3
-        worker.update_delay = test_update_delay_value
-        worker.refresh_all(test_objs)
-        assert worker.refresh_prefix_list.call_count == (len(test_objs)*2)
-        worker.refresh_prefix_list.assert_called_with(test_afi, test_objs[1])
+        assert len(m.deltas) == m.call_count
+        for delta in m.deltas:
+            assert 2.5 <= delta.seconds <= 3.5
+        if update_delay is None:
+            # Test refresh_prefix_all behavior without update_delay
+            assert m.call_count == 0
+            assert worker.refresh_prefix_list.call_count == 2
+            worker.refresh_prefix_list.assert_called_with(test_afi)
+        else:
+            # Test refresh_prefix_all behavior with update_delay
+            assert m.call_count == len(test_objs) * 2
+            assert worker.refresh_prefix_list.call_count == len(test_objs) * 2
+            worker.refresh_prefix_list.assert_called_with(test_afi,
+                                                          test_objs[1])
 
     def test_get_policies(self, worker, mocker):
         """Test case for 'get_policies' method."""

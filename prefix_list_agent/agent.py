@@ -131,11 +131,11 @@ class PrefixListAgent(PrefixListBase, eossdk.AgentHandler,
     @update_delay.setter
     def update_delay(self, i):
         """Set 'update_delay' property."""
-        i = int(i)
-        if i in range(1, 121):
-            self._update_delay = i
-        else:
-            raise ValueError("update_delay must be in range 1 - 120")
+        if i is not None:
+            i = int(i)
+            if i not in range(1, 121):
+                raise ValueError("update_delay must be in range 1 - 120")
+        self._update_delay = i
 
     @property
     def status(self):
@@ -217,17 +217,21 @@ class PrefixListAgent(PrefixListBase, eossdk.AgentHandler,
         """Perform one-time start actions."""
         pass
 
+    def init_worker(self):
+        """Create a worker instance."""
+        self.info("Initialising worker")
+        self.worker = PrefixListWorker(endpoint=self.rptk_endpoint,
+                                       path=self.source_dir,
+                                       eapi=self.eapi_mgr,
+                                       update_delay=self.update_delay)
+
     def run(self):
         """Spawn worker process."""
         self.status = "running"
         if self.rptk_endpoint is not None:
             self.last_start = datetime.datetime.now()
             try:
-                self.info("Initialising worker")
-                self.worker = PrefixListWorker(endpoint=self.rptk_endpoint,
-                                               path=self.source_dir,
-                                               eapi=self.eapi_mgr,
-                                               update_delay=self.update_delay)
+                self.init_worker()
                 self.watch(self.worker.p_data, "result")
                 self.watch(self.worker.p_err, "error")
                 self.info("Starting worker")
