@@ -101,7 +101,7 @@ class TestPrefixListWorker(object):
         if prefix_list is not None:
             assert cmd.endswith(prefix_list)
 
-    @pytest.mark.parametrize(("update_delay",), ((None,), (3,)))
+    @pytest.mark.parametrize(("update_delay",), ((None,), (1,)))
     def test_refresh_all(self, worker, mocker, update_delay):
         """Test case for 'refresh_all' method."""
         test_objs = ["AS-FOO", "AS-BAR"]
@@ -125,7 +125,7 @@ class TestPrefixListWorker(object):
         worker.refresh_all(test_objs)
         assert len(m.deltas) == m.call_count
         for delta in m.deltas:
-            assert 2.5 <= delta.seconds <= 3.5
+            assert 0.5 <= delta.seconds <= 1.5
         if update_delay is None:
             # Test refresh_prefix_all behavior without update_delay
             assert m.call_count == 0

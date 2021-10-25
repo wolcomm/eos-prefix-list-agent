@@ -109,7 +109,7 @@ class TestPrefixListAgent(object):
         ("rptk_endpoint", "https://x.com"),
         ("source_dir", "/foo/bar"),
         ("refresh_interval", 60),
-        ("update_delay", 30),
+        ("update_delay", 1),
         ("bad_option", None)
     ))
     def test_set(self, agent, mocker, key, value):
@@ -126,7 +126,7 @@ class TestPrefixListAgent(object):
         ("rptk_endpoint", "endpoint", "https://foo.bar"),
         ("source_dir", "path", "/quux/baz"),
         ("update_delay", "update_delay", None),
-        ("update_delay", "update_delay", 15)
+        ("update_delay", "update_delay", 1)
     ))
     def test_init_worker(self, agent, agent_key, worker_key, value):
         """Test case for `init_worker` method."""
