@@ -10,11 +10,14 @@ env:
   - AZURE_ACR_TOKEN_NAME="travis-ci-eos-prefix-list-agent"
   # AZURE_ACR_TOKEN
   - secure: "IsXsMf9pRjW9abbFy4Hdjy6tvMexVmZGe+5kXblJ2Rfepnkv9PdEw+OyjUe8wz2Wf3hZqINECVjfzqHOI3Rae63S+aZqGxRrns+WJafIJK1MpwAI+h4SXcFgAL9zFGmFnO3grYkG8R06jLsVx2hmGqzivAZDYwxmZ9xZJYP4eFTV8HKUlpcHxLQzRCIg3gDABB/GCFERayNusFTfMFBxs2ZQ++A3DMgek9muQhhAPPr2i0/wEG0WGtrVRSP0eTQOdL7de1oPjSOL+kukMlJxlsbI3vyC70D0AL/EXLrkzXcngjPMzqJ6Yy9qo/Z44T8WxELLVT/4Q5PmA2uwfrH7JMqOeUlDeq5NgmrfkFd8nBQ5RCjGHBvrU9A3mqGGth946UunEJjR2k6tCDhMOXyFdFLKM6IeIhWR5oHpheOfI2HlTxMjUSHP0efblMkMQ3rQM26uMwjQ2hWvz38oTTuszc2bT69YiznY+fxmQE0yNO/oSEqD8c+NTWBorWKSJtVQWCThz6jpYWoD8tlwyvghLKVDg9f9X1wytILBOrN7cFo/mJP36Lm4uFOICY9EDgzXZlGZcTc83Dgnm1ibT5R8mS9vPhMo0lvY8/A5e8soam1dJkA7ya3MJjHNvuSTMFLiU4qaf88y+fjX2LSw78csxNFQbynKMOr4HbTifO373+4="
+  - CEOS_VERSION_LATEST="4.27.0F"
   matrix:
-  - CEOS_VERSION="4.21.5F"
   - CEOS_VERSION="4.22.4M"
-  - CEOS_VERSION="4.24.0F"
-  - CEOS_VERSION="latest"
+  - CEOS_VERSION="4.23.10M"
+  - CEOS_VERSION="4.24.4M"
+  - CEOS_VERSION="4.25.5M"
+  - CEOS_VERSION="4.26.3M"
+  - CEOS_VERSION="4.27.0F"
 matrix:
   fast_finish: true
 before_install:
@@ -44,7 +47,7 @@ deploy:
   on:
     tags: true
     python: '2.7'
-    condition: "$CEOS_VERSION = latest"
+    condition: "$CEOS_VERSION = $CEOS_VERSION_LATEST"
 - provider: releases
   api_key:
     secure: ehKR+Ze6T9ns7e+n5vfRNFFsl62Endugyda0eue9nWuW1LElTLO1JPEQySTXHuo5PkwG0aw+qbJMT6EN9lIJUPL0R9e3hw0CH0GhgR7wBM9d3itpF5Qcnd/wO0XX+kyh8pklu5J/qZ1fSfQGVPs6Qpn5Mx0bHcCHsl52i7xqM+3kyN7rzoTZkZC22obv5NO2SVlMcNquAcES38mFaz/eeV03XGRSL7w2X7mpwIilt3MEOYbDOLMv9Rk0cg/jSZZ6Dnc9vAaMaYtcFKuDqG7PmjDVgKiCd03Wz9aLg5aS37NFOJ/vA0L/v6cxMhkzOg1733wRZaSGQ7SG58z8Yrmk4+yD3dibKWzsshHEMHYQiIWSOBWG3sgTi8olzrnvLSEow69tzOXTs01bs0cjZuyX6ydT3x1NG20v1kBoHaxEWtGKDb5MNkg/69sb5Iz3huYeYcHfY+Tq5i6O+73k9H9NJjllwJ4IkOeBAeFgJHdfjWqtely2OcnRiKpnqUtUliCEkuzEln8SK71o1lKOgTy2r6804eWV9NZwLSyWm3E+SfEfpVnKCfLOe7rS7PtS0yAgicUcmGnYqeXoSlyj5o0i+KGZWTjJF/Jks5uimt+WmU2OLboi6eTvx0ramfq6gozSF+6r16zV2VVjUAE6YPGEkfI1+AUnlIrQUo1NtlsqddQ=
@@ -57,7 +60,7 @@ deploy:
   on:
     tags: true
     python: '2.7'
-    condition: "$CEOS_VERSION = latest"
+    condition: "$CEOS_VERSION = $CEOS_VERSION_LATEST"
 after_script:
 - docker kill "${CONTAINER_ID}"
 - docker image rm "${IMAGE_ID}"
