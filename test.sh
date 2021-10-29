@@ -1,5 +1,14 @@
-VERSION="latest"
+#!/usr/bin/env bash
+
+DEFAULT_VERSION="4.26.1F"
 REGISTRY="workonline.azurecr.io"
+USAGE="$(cat <<EOF
+usage: $0 ([-d] [-v <version>] | -h)
+    -d              Drop into a bash shell on the cEOS container after testing.
+    -v <version>    Test on cEOS <version>. default: $DEFAULT_VERSION.
+    -h              Display this help message.
+EOF
+)"
 
 ok() { echo "  [OK]"; }
 fail() {
@@ -20,6 +29,30 @@ clean() {
   fi
 }
 
+while getopts "dv:h" OPT; do
+    case $OPT in
+        d)
+            DEBUG=1
+            ;;
+        v)
+            VERSION="$OPTARG"
+            ;;
+        h)
+            echo "$USAGE"
+            exit 0
+            ;;
+        *)
+            echo "$USAGE"
+            exit 1
+            ;;
+    esac
+done
+
+if [[ -z "$VERSION" ]]; then
+    echo "Using default cEOS version: $DEFAULT_VERSION"
+    VERSION="$DEFAULT_VERSION"
+fi
+
 # Prepare test container
 echo -n "Building test image"
 IMAGE_ID="$(docker build --build-arg REGISTRY="${REGISTRY}" --build-arg VERSION="${VERSION}" --quiet .)" &&
@@ -36,7 +69,7 @@ docker cp ${CONTAINER_ID}:/root/coverage.xml ./ >/dev/null &&
   ok || fail
 
 # Drop into a shell if requested
-if [[ -n "$1" ]]; then
+if [[ -n "$DEBUG" ]]; then
   docker exec --interactive --tty "${CONTAINER_ID}" /bin/bash ||
     fail
 fi
