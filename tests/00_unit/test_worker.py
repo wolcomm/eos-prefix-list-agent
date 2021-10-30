@@ -13,16 +13,17 @@
 
 from __future__ import print_function
 
+import datetime
+import io
 import json
 import signal
-import StringIO
 import time
-import urllib2
-import datetime
+import urllib.error
+import urllib.request
+import unittest.mock
 
 import pytest
 
-from mock import MagicMock
 from prefix_list_agent.exceptions import TermException
 from prefix_list_agent.worker import PrefixListWorker
 
@@ -37,7 +38,7 @@ class TestPrefixListWorker(object):
     @pytest.mark.parametrize(("case", "side_effect"), (
         ("success", (({"foo": "bar"}, set()),)),
         ("sigterm", TermException),
-        ("error", StandardError),
+        ("error", RuntimeError),
     ))
     def test_run(self, worker, mocker, case, side_effect):
         """Test case for 'run' method."""
@@ -52,14 +53,14 @@ class TestPrefixListWorker(object):
         elif case == "sigterm":
             worker.notice.assert_called_once_with("Got SIGTERM signal: exiting.")  # noqa: E501
         elif case == "error":
-            assert type(worker.error) is StandardError
+            assert type(worker.error) is RuntimeError
         else:
             raise ValueError(case)
 
     @pytest.mark.parametrize(("case", "side_effect"), (
         ("success", (({"foo": "bar"}, set()),)),
         ("sigterm", TermException),
-        ("error", StandardError),
+        ("error", RuntimeError),
     ))
     def test_start(self, worker, mocker, case, side_effect):
         """Test case for 'start' method."""
@@ -75,7 +76,7 @@ class TestPrefixListWorker(object):
         elif case == "sigterm":
             assert worker.exitcode == 127 + signal.SIGTERM
         elif case == "error":
-            assert type(worker.error) is StandardError
+            assert type(worker.error) is RuntimeError
         else:
             raise ValueError(case)
         if worker.is_alive():
@@ -96,7 +97,7 @@ class TestPrefixListWorker(object):
         test_afi = "ip"
         worker.refresh_prefix_list(test_afi, prefix_list)
         assert worker.eapi.run_show_cmd.call_count == 1
-        cmd = worker.eapi.run_show_cmd.call_args.args[0]
+        cmd = worker.eapi.run_show_cmd.call_args[0][0]
         assert test_afi in cmd
         if prefix_list is not None:
             assert cmd.endswith(prefix_list)
@@ -118,7 +119,7 @@ class TestPrefixListWorker(object):
                 delta = t1 - t0
                 m.deltas.append(delta)
             return wrapped
-        m = MagicMock()
+        m = unittest.mock.MagicMock()
         m.side_effect = func_wrapper(time.sleep, m)
         mocker.patch.object(time, "sleep", m)
         worker.update_delay = update_delay
@@ -141,10 +142,10 @@ class TestPrefixListWorker(object):
     def test_get_policies(self, worker, mocker):
         """Test case for 'get_policies' method."""
         resp_data = {"strict": "strict descr", "loose": "loose descr"}
-        resp_fp = StringIO.StringIO(json.dumps(resp_data))
-        return_value = urllib2.addinfourl(url="/testing", code=200,
-                                          headers=None, fp=resp_fp)
-        mocker.patch.object(urllib2, "urlopen", autospec=True,
+        resp_fp = io.StringIO(json.dumps(resp_data))
+        return_value = urllib.request.addinfourl(url="/testing", code=200,
+                                                 headers=None, fp=resp_fp)
+        mocker.patch.object(urllib.request, "urlopen", autospec=True,
                             return_value=return_value)
         policies = worker.get_policies()
         assert policies == resp_data
@@ -164,9 +165,9 @@ class TestPrefixListWorker(object):
                            "AS-BAR": {"ipv4": [], "ipv6": []}},
                 "loose":  {"AS-BAZ": {"ipv4": [], "ipv6": []}}}
         mocker.patch.object(worker, "get_data_bulk", autospec=True,
-                            side_effect=(data["strict"], StandardError))
+                            side_effect=(data["strict"], RuntimeError))
         mocker.patch.object(worker, "get_data_obj", autospec=True,
-                            side_effect=(data["loose"], StandardError))
+                            side_effect=(data["loose"], RuntimeError))
         result = worker.get_data(configured)
         assert result == data
         assert worker.get_data_bulk.call_count == 2
@@ -177,10 +178,10 @@ class TestPrefixListWorker(object):
         policy = "strict"
         objs = ["AS-FOO", "AS-BAR"]
         resp_data = {obj: {"ipv4": [], "ipv6": []} for obj in objs}
-        resp_fp = StringIO.StringIO(json.dumps(resp_data))
-        return_value = urllib2.addinfourl(url="/testing", code=200,
-                                          headers=None, fp=resp_fp)
-        mocker.patch.object(urllib2, "urlopen", autospec=True,
+        resp_fp = io.StringIO(json.dumps(resp_data))
+        return_value = urllib.request.addinfourl(url="/testing", code=200,
+                                                 headers=None, fp=resp_fp)
+        mocker.patch.object(urllib.request, "urlopen", autospec=True,
                             return_value=return_value)
         result = worker.get_data_bulk(policy, objs)
         assert result == resp_data
@@ -190,10 +191,10 @@ class TestPrefixListWorker(object):
         policy = "strict"
         obj = "AS-FOO"
         resp_data = {obj: {"ipv4": [], "ipv6": []}}
-        resp_fp = StringIO.StringIO(json.dumps(resp_data))
-        return_value = urllib2.addinfourl(url="/testing", code=200,
-                                          headers=None, fp=resp_fp)
-        mocker.patch.object(urllib2, "urlopen", autospec=True,
+        resp_fp = io.StringIO(json.dumps(resp_data))
+        return_value = urllib.request.addinfourl(url="/testing", code=200,
+                                                 headers=None, fp=resp_fp)
+        mocker.patch.object(urllib.request, "urlopen", autospec=True,
                             return_value=return_value)
         result = worker.get_data_obj(policy, obj)
         assert result == resp_data
@@ -209,7 +210,7 @@ class TestPrefixListWorker(object):
     ))
     def test_write_results(self, worker, mocker, configured, data):
         """Test case for 'write_results' method."""
-        mocker.patch("__builtin__.open", mocker.mock_open())
+        mocker.patch("builtins.open", mocker.mock_open())
         stats, written_objs = worker.write_results(configured, data)
         assert stats["succeeded"] == 2
         assert stats["failed"] == 2
@@ -223,7 +224,7 @@ class TestPrefixListWorker(object):
     ))
     def test_write_prefix_list(self, worker, mocker, entries, side_effect):
         """Test case for 'write_prefix_list' method."""
-        m = mocker.patch("__builtin__.open", mocker.mock_open())
+        m = mocker.patch("builtins.open", mocker.mock_open())
         m.side_effect = side_effect
         path = "/tmp/foo"
         worker.write_prefix_list(path, entries, "ipv6")
@@ -249,7 +250,7 @@ class TestPrefixListWorker(object):
         pytest.param("fail", False,
                      marks=pytest.mark.xfail(raises=RuntimeError)),
         pytest.param("error", False,
-                     marks=pytest.mark.xfail(raises=StandardError))
+                     marks=pytest.mark.xfail(raises=RuntimeError))
     ))
     def test_eapi_request(self, worker, cmd, allow_empty):
         """Test case for 'eapi_request' method."""
@@ -260,27 +261,27 @@ class TestPrefixListWorker(object):
             assert result["foo"] == "bar"
 
     @pytest.mark.parametrize("side_effect", (
-        (urllib2.addinfourl(url="/testing", code=200, headers=None,
-                            fp=StringIO.StringIO('{"foo":"bar"}')),),
-        pytest.param(urllib2.URLError(reason="Testing"),
-                     marks=pytest.mark.xfail(raises=urllib2.URLError)),
-        pytest.param(urllib2.HTTPError(url="/testing", code=500,
-                                       msg="Testing", hdrs=None, fp=None),
-                     marks=pytest.mark.xfail(raises=urllib2.HTTPError))
+        (urllib.request.addinfourl(url="/testing", code=200, headers=None,
+                                   fp=io.StringIO('{"foo":"bar"}')),),
+        pytest.param(urllib.error.URLError(reason="Testing"),
+                     marks=pytest.mark.xfail(raises=urllib.error.URLError)),
+        pytest.param(urllib.error.HTTPError(url="/testing", code=500,
+                                            msg="Testing", hdrs=None, fp=None),
+                     marks=pytest.mark.xfail(raises=urllib.error.HTTPError))
     ))
     def test_rptk_request(self, mocker, worker, side_effect):
         """Test case for 'rptk_request' method."""
-        mocker.patch.object(urllib2, "urlopen", autospec=True,
+        mocker.patch.object(urllib.request, "urlopen", autospec=True,
                             side_effect=side_effect)
         result = worker.rptk_request("/testing")
         assert result["foo"] == "bar"
 
     @pytest.mark.parametrize("obj", (
         '{"foo":"bar"}',
-        StringIO.StringIO('{"foo":"bar"}'),
+        io.StringIO('{"foo":"bar"}'),
         pytest.param("foo",
                      marks=pytest.mark.xfail(raises=ValueError, strict=True)),
-        pytest.param(StringIO.StringIO("foo"),
+        pytest.param(io.StringIO("foo"),
                      marks=pytest.mark.xfail(raises=ValueError, strict=True))
     ))
     def test_json_load(self, worker, obj):

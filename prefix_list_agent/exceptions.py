@@ -11,8 +11,6 @@
 # the License.
 """prefix_list_agent custom execptions."""
 
-from __future__ import print_function
-
 
 class TermException(BaseException):
     """Raised when SIGTERM is handled by handle_sigterm."""

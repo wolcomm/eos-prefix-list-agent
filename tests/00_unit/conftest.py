@@ -11,16 +11,14 @@
 # the License.
 """Fixtures for prefix_list_agent test cases."""
 
-from __future__ import print_function
-
 import json
+import unittest.mock
 
-import mock
 import pytest
 
 import eossdk
 
-from _multiprocessing import Connection
+from multiprocessing.connection import Connection
 
 from prefix_list_agent.agent import PrefixListAgent
 
@@ -40,7 +38,7 @@ class DummySdk(object):
 
     def get_agent_mgr(self):
         """Stub for 'get_agent_mgr' method."""
-        mgr = mock.create_autospec(eossdk.AgentMgr)
+        mgr = unittest.mock.create_autospec(eossdk.AgentMgr)
 
         test_options = {"rptk_endpoint": "https://example.com",
                         "source_dir": "/foo/bar",
@@ -60,16 +58,16 @@ class DummySdk(object):
 
     def get_timeout_mgr(self):
         """Stub for 'get_timeout_mgr' method."""
-        mgr = mock.create_autospec(eossdk.TimeoutMgr)
+        mgr = unittest.mock.create_autospec(eossdk.TimeoutMgr)
         return mgr
 
     def get_eapi_mgr(self):
         """Stub for 'get_eapi_mgr' method."""
-        mgr = mock.create_autospec(eossdk.EapiMgr)
+        mgr = unittest.mock.create_autospec(eossdk.EapiMgr)
 
         def run_show_cmd(cmd):
             if cmd == "error":
-                raise StandardError
+                raise RuntimeError
             elif cmd == "fail":
                 return eossdk.EapiResponse(False, 255, "synthetic_failure", [])
             elif cmd == "empty":
@@ -118,5 +116,5 @@ def worker(agent):
 @pytest.fixture()
 def connection(mocker):
     """Provide a mocked Connection instance."""
-    conn = mock.create_autospec(Connection)
+    conn = unittest.mock.create_autospec(Connection)
     return conn

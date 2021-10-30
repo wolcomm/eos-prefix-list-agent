@@ -11,8 +11,6 @@
 # the License.
 """Fixtures for PrefixListAgent integration tests."""
 
-from __future__ import print_function
-
 import json
 import multiprocessing
 import sys

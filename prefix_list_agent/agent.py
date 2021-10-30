@@ -11,9 +11,7 @@
 # the License.
 """prefix_list_agent agent implementation."""
 
-from __future__ import print_function
-
-import collections
+import collections.abc
 import datetime
 import filecmp
 import os
@@ -46,14 +44,14 @@ class PrefixListAgent(PrefixListBase, eossdk.AgentHandler,
         elif arch == "64bit":
             lib_dir = "/usr/lib64"
         else:  # pragma: no cover
-            raise RuntimeError("Unknown architecture '{}'".format(arch))
+            raise RuntimeError(f"Unknown architecture '{arch}'")
         profile_path = os.path.join(lib_dir, "SysdbMountProfiles", name)
         # get a tempfile for writing the profile to
         with tempfile.NamedTemporaryFile() as tmp:
             # write the profile file
-            tmp.write("agentName:{}-%sliceId\n\n".format(name))
+            tmp.write(f"agentName:{name}-%sliceId\n\n".encode())
             for profile in cls.sysdb_mounts:
-                tmp.write("Include: EosSdk_{}.include\n".format(profile))
+                tmp.write(f"Include: EosSdk_{profile}.include\n".encode())
             tmp.flush()
             # check whether an existing file matches and bail out
             if os.path.isfile(profile_path):
@@ -159,7 +157,7 @@ class PrefixListAgent(PrefixListBase, eossdk.AgentHandler,
         """Set 'result' property."""
         self._result = r
         self.agent_mgr.status_set("result", self.result)
-        self.notice("Result: {}".format(self.result))
+        self.notice(f"Result: {self.result}")
 
     @property
     def last_start(self):
@@ -170,10 +168,10 @@ class PrefixListAgent(PrefixListBase, eossdk.AgentHandler,
     def last_start(self, ts):
         """Set the 'last_start' timestamp."""
         if not isinstance(ts, datetime.datetime):
-            raise TypeError("Expected datetime.datetime, got {}".format(ts))
+            raise TypeError(f"Expected datetime.datetime, got {ts}")
         self._last_start = ts
         self.agent_mgr.status_set("last_start", str(self.last_start))
-        self.info("Last start: {}".format(ts))
+        self.info(f"Last start: {ts}")
 
     @property
     def last_end(self):
@@ -184,10 +182,10 @@ class PrefixListAgent(PrefixListBase, eossdk.AgentHandler,
     def last_end(self, ts):
         """Set the 'last_end' timestamp."""
         if not isinstance(ts, datetime.datetime):
-            raise TypeError("Expected datetime.datetime, got {}".format(ts))
+            raise TypeError(f"Expected datetime.datetime, got {ts}")
         self._last_end = ts
         self.agent_mgr.status_set("last_end", str(self.last_end))
-        self.info("Last end: {}".format(ts))
+        self.info(f"Last end: {ts}")
 
     def configure(self):
         """Read and set all configuration options."""
@@ -200,11 +198,11 @@ class PrefixListAgent(PrefixListBase, eossdk.AgentHandler,
         """Set a configuration option."""
         if not value:
             value = None
-        self.info("Setting configuration '{}'='{}'".format(key, value))
+        self.info(f"Setting configuration '{key}'='{value}'")
         if key in self.agent_options:
             setattr(self, key, value)
         else:
-            self.warning("Ignoring unknown option '{}'".format(key))
+            self.warning(f"Ignoring unknown option '{key}'")
 
     def start(self):
         """Start up the agent."""
@@ -236,32 +234,32 @@ class PrefixListAgent(PrefixListBase, eossdk.AgentHandler,
                 self.watch(self.worker.p_err, "error")
                 self.info("Starting worker")
                 self.worker.start()
-                self.info("Worker started: pid {}".format(self.worker.pid))
+                self.info(f"Worker started: pid {self.worker.pid}")
             except Exception as e:
-                self.err("Starting worker failed: {}".format(e))
+                self.err(f"Starting worker failed: {e}")
                 self.failure(err=e)
         else:
             self.warning("'rptk_endpoint' is not set")
             self.sleep()
 
-    def watch(self, conn, type):
+    def watch(self, conn, typ):
         """Watch a Connection for new data."""
-        self.info("Trying to watch for {} data on {}".format(type, conn))
+        self.info(f"Trying to watch for {typ} data on {conn}")
         fileno = conn.fileno()
         self.watch_readable(fileno, True)
         self.watching.add(conn)
-        self.info("Watching {} for {} data".format(conn, type))
+        self.info(f"Watching {conn} for {typ} data")
 
     def unwatch(self, conn, close=False):
         """Stop watching a Connection for new data."""
-        self.info("Trying to remove watch on {}".format(conn))
+        self.info(f"Trying to remove watch on {conn}")
         fileno = conn.fileno()
         self.watch_readable(fileno, False)
         if conn in self.watching:
             self.watching.remove(conn)
-        self.info("Stopped watching {}".format(conn))
+        self.info(f"Stopped watching {conn}")
         if close:
-            self.info("Closing connection {}".format(conn))
+            self.info(f"Closing connection {conn}")
             conn.close()
 
     def success(self):
@@ -297,20 +295,20 @@ class PrefixListAgent(PrefixListBase, eossdk.AgentHandler,
     def report(self, **stats):
         """Report statistics to the agent manager."""
         for name, value in stats.items():
-            self.info("{}: {}".format(name, value))
+            self.info(f"{name}: {value}")
             self.agent_mgr.status_set(name, str(value))
 
     def cleanup(self, process):
         """Kill the process if it is still running."""
         self.status = "cleanup"
         process_name = process.__class__.__name__
-        self.info("Cleaning up {} process".format(process_name))
+        self.info(f"Cleaning up {process_name} process")
         if process is not None:
-            self.info("Closing connections from {}".format(process_name))
+            self.info(f"Closing connections from {process_name}")
             for conn in [c for c in
                          [getattr(process, k) for k in dir(process)
                           if not k.startswith("_")]
-                         if isinstance(c, collections.Hashable)
+                         if isinstance(c, collections.abc.Hashable)
                          and c in self.watching]:
                 try:
                     self.unwatch(conn, close=True)
@@ -319,15 +317,15 @@ class PrefixListAgent(PrefixListBase, eossdk.AgentHandler,
             for retry in range(3):
                 if process.is_alive():
                     if retry:
-                        self.info("Sending {} SIGTERM".format(process_name))
+                        self.info(f"Sending {process_name} SIGTERM")
                         process.terminate()
                     timeout = retry * 5 + 1
-                    self.info("Waiting {} seconds for {} (pid: {}) to join"
-                              .format(timeout, process_name, process.pid))
+                    self.info(f"Waiting {timeout} seconds for {process_name} "
+                              f"(pid: {process.pid}) to join")
                     process.join(timeout)
             if process.is_alive():
-                self.notice("Timeout waiting for {}. Sending SIGKILL"
-                            .format(process_name))
+                self.notice(f"Timeout waiting for {process_name}. "
+                            "Sending SIGKILL")
                 os.kill(process.pid, signal.SIGKILL)
         self.info("Cleanup complete")
 
@@ -378,7 +376,7 @@ class PrefixListAgent(PrefixListBase, eossdk.AgentHandler,
 
     def on_readable(self, fd):
         """Handle a watched file descriptor becoming readable."""
-        self.info("Watched file descriptor {} is readable".format(fd))
+        self.info(f"Watched file descriptor {fd} is readable")
         if fd == self.worker.p_data.fileno():
             self.info("Data channel is ready")
             return self.success()

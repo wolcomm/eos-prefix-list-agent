@@ -11,8 +11,6 @@
 # the License.
 """Tests for prefix_list_agent.cli module."""
 
-from __future__ import print_function
-
 import sys
 
 import pytest
@@ -34,7 +32,7 @@ class TestCli(object):
 
     @pytest.mark.parametrize(("arg", "ret"),
                              ((None, None), (KeyboardInterrupt, 130),
-                              (StandardError, StandardError)))
+                              (RuntimeError, RuntimeError)))
     @pytest.mark.parametrize("sysdb_mp_written", (True, False))
     def test_start(self, sdk, mocker, arg, ret, sysdb_mp_written):
         """Test case for cli entrypoint."""

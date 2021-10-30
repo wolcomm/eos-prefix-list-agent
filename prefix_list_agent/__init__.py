@@ -11,9 +11,6 @@
 # the License.
 """prefix_list_agent Package."""
 
-from __future__ import print_function
-from __future__ import unicode_literals
-
 import logging
 
 import prefix_list_agent.__meta__  # noqa

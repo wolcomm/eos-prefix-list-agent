@@ -11,8 +11,6 @@
 # the License.
 """Tests for prefix_list_agent.agent module."""
 
-from __future__ import print_function
-
 import pytest
 
 from prefix_list_agent.base import PrefixListBase

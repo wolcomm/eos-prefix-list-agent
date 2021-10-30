@@ -11,8 +11,6 @@
 # the License.
 """Fixtures for PrefixListAgent integration tests."""
 
-from __future__ import print_function
-
 import time
 
 import pytest
@@ -23,6 +21,7 @@ from rptk_stub import RptkStubProcess
 @pytest.fixture(scope="module")
 def node():
     """Provide a pyeapi node connected to the local unix socket."""
+    err = None
     for retry in range(60):
         try:
             import pyeapi
@@ -31,10 +30,11 @@ def node():
             assert node.version
             break
         except Exception as e:
+            err = e
             time.sleep(3)
             continue
     else:
-        raise e
+        raise err
     return node
 
 

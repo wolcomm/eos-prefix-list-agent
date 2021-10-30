@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # Copyright (c) 2019 Workonline Communications (Pty) Ltd. All rights reserved.
 #
 # The contents of this file are licensed under the MIT License
@@ -12,14 +12,11 @@
 # the License.
 """prefix_list_agent package metadata."""
 
-from __future__ import print_function
-from __future__ import unicode_literals
-
-__version__ = "0.1.2.rc1"
+__version__ = "0.2.0a1"
 __author__ = "Ben Maddison"
 __author_email__ = "benm@workonline.africa"
 __licence__ = "MIT"
-__copyright__ = "Copyright (c) 2019 Workonline Communications (Pty) Ltd"
+__copyright__ = "Copyright (c) 2019-2021 Workonline Communications (Pty) Ltd"
 __url__ = "https://github.com/wolcomm/eos-prefix-list-agent"
 __classifiers__ = [
     "Development Status :: 4 - Beta",
@@ -27,7 +24,7 @@ __classifiers__ = [
     "Intended Audience :: Telecommunications Industry",
     "License :: OSI Approved :: MIT License",
     "Operating System :: POSIX :: Other",
-    "Programming Language :: Python :: 2.7",
+    "Programming Language :: Python :: 3",
     "Topic :: Internet",
     "Topic :: System :: Networking"
 ]

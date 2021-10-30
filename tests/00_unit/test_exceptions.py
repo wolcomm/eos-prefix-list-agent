@@ -11,8 +11,6 @@
 # the License.
 """Tests for prefix_list_agent.exceptions module."""
 
-from __future__ import print_function
-
 import signal
 
 import pytest

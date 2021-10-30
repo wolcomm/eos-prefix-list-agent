@@ -11,8 +11,6 @@
 # the License.
 """Tests for prefix_list_agent.agent module."""
 
-from __future__ import print_function
-
 import datetime
 import signal
 import time
@@ -143,7 +141,7 @@ class TestPrefixListAgent(object):
         for method in methods:
             getattr(agent, method).assert_called_once_with()
 
-    @pytest.mark.parametrize("side_effect", ((None,), StandardError()))
+    @pytest.mark.parametrize("side_effect", ((None,), RuntimeError()))
     @pytest.mark.parametrize("rptk_endpoint", ("https://example.com", None))
     def test_run(self, agent, worker, mocker, side_effect, rptk_endpoint):
         """Test case for 'run' method."""
@@ -197,7 +195,7 @@ class TestPrefixListAgent(object):
         agent.cleanup.assert_called_once_with(process=agent.worker)
         agent.sleep.assert_called_once_with()
 
-    @pytest.mark.parametrize("local_err", (None, StandardError("test_error")))
+    @pytest.mark.parametrize("local_err", (None, RuntimeError("test_error")))
     @pytest.mark.parametrize("worker_process", (True, False))
     @pytest.mark.parametrize("restart", (True, False))
     def test_failure(self, agent, mocker, local_err, worker_process, restart):
@@ -206,7 +204,7 @@ class TestPrefixListAgent(object):
             mocker.patch.object(agent, method, autospec=True)
         mock_worker = mocker.patch("prefix_list_agent.agent.PrefixListWorker",
                                    autospec=True)
-        worker_err = StandardError("worker_err")
+        worker_err = RuntimeError("worker_err")
         mock_worker.return_value.error = worker_err
         agent.worker = mock_worker(endpoint=agent.rptk_endpoint,
                                    path=agent.source_dir,
@@ -236,7 +234,7 @@ class TestPrefixListAgent(object):
         agent.report(**stats)
         assert agent.agent_mgr.status_set.call_count == len(stats)
 
-    @pytest.mark.parametrize("unwatch_err", ((None,), StandardError()))
+    @pytest.mark.parametrize("unwatch_err", ((None,), RuntimeError()))
     @pytest.mark.parametrize("catch_sigterm", (True, False))
     def test_cleanup(self, agent, worker, mocker, unwatch_err, catch_sigterm):
         """Test case for 'cleanup' method."""
@@ -278,7 +276,7 @@ class TestPrefixListAgent(object):
         agent.sleep()
         agent.timeout_time_is.assert_called_once_with(agent.refresh_interval)
 
-    @pytest.mark.parametrize("side_effect", ((None,), StandardError))
+    @pytest.mark.parametrize("side_effect", ((None,), RuntimeError))
     def test_shutdown(self, agent, mocker, side_effect):
         """Test case for 'shutdown' method."""
         mocker.patch.object(agent, "cleanup", autospec=True,
@@ -287,7 +285,7 @@ class TestPrefixListAgent(object):
         agent.cleanup.assert_called_once_with(process=agent.worker)
         agent.agent_mgr.agent_shutdown_complete_is.assert_called_once_with(True)  # noqa: E501
 
-    @pytest.mark.parametrize("side_effect", ((None,), StandardError))
+    @pytest.mark.parametrize("side_effect", ((None,), RuntimeError))
     def test_restart(self, agent, mocker, side_effect):
         """Test case for 'restart' method."""
         mocker.patch.object(agent, "cleanup", autospec=True,

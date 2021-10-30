@@ -11,8 +11,6 @@
 # the License.
 """prefix_list_agent cli entry point."""
 
-from __future__ import print_function
-
 import sys
 
 from prefix_list_agent import PrefixListAgent

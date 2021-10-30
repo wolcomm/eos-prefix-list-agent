@@ -11,8 +11,6 @@
 # the License.
 """prefix_list_agent worker functions."""
 
-from __future__ import print_function
-
 import collections
 import json
 import multiprocessing
@@ -21,10 +19,13 @@ import re
 import signal
 import sys
 import time
-import urllib2
+import urllib.error
+import urllib.request
 
 from prefix_list_agent.base import PrefixListBase
 from prefix_list_agent.exceptions import handle_sigterm, TermException
+
+PATH_RE = r"^file:{}/(?P<policy>\w+)/(?P<file>[-.:\w]+)$"
 
 
 class PrefixListWorker(multiprocessing.Process, PrefixListBase):
@@ -38,8 +39,7 @@ class PrefixListWorker(multiprocessing.Process, PrefixListBase):
         self.path = path
         self.eapi = eapi
         self.update_delay = update_delay
-        self.path_re = re.compile(r"^file:{}/(?P<policy>\w+)/(?P<file>[-.:\w]+)$"  # noqa: E501
-                                  .format(self.path.rstrip("/")))
+        self.path_re = re.compile(PATH_RE.format(self.path.rstrip("/")))
         self._p_err, self._c_err = multiprocessing.Pipe(duplex=False)
         self._p_data, self._c_data = multiprocessing.Pipe(duplex=False)
 
@@ -91,18 +91,18 @@ class PrefixListWorker(multiprocessing.Process, PrefixListBase):
     def get_configured(self, policies):
         """Get the prefix-lists in running-config."""
         configured = {p: collections.defaultdict(dict) for p in policies}
-        self.info("Searching for prefix-lists with source matching {}"
-                  .format(self.path_re.pattern))
+        self.info("Searching for prefix-lists with "
+                  f"source matching {self.path_re.pattern}")
         for afi, cmd in (("ipv4", "show ip prefix-list"),
                          ("ipv6", "show ipv6 prefix-list")):
             data = self.eapi_request(cmd, result_node="ipPrefixLists")
-            self.debug("Got response: {}".format(data))
+            self.debug(f"Got response: {data}")
             for name, config in data.items():
                 try:
                     source = config["ipPrefixListSource"]
                 except KeyError:
                     continue
-                self.debug("Testing {}, source {}".format(name, source))
+                self.debug(f"Testing {name}, source {source}")
                 m = self.path_re.match(source)
                 if m:
                     self.debug("Source matched")
@@ -110,17 +110,16 @@ class PrefixListWorker(multiprocessing.Process, PrefixListBase):
                     if policy in policies:
                         configured[policy][name][afi] = file
                     else:
-                        self.warning("Ignoring unknown policy {}"
-                                     .format(policy))
+                        self.warning(f"Ignoring unknown policy {policy}")
                 else:
                     self.debug("No match")
         return configured
 
     def refresh_prefix_list(self, afi, prefix_list=None):
         """Refresh all prefix-lists or a single named prefix-list."""
-        cmd = "refresh {} prefix-list".format(afi)
+        cmd = f"refresh {afi} prefix-list"
         if prefix_list is not None:
-            cmd += " {}".format(prefix_list)
+            cmd += f" {prefix_list}"
         messages = self.eapi_request(cmd, result_node="messages",
                                      allow_empty=True)
         for msg in messages:
@@ -142,9 +141,9 @@ class PrefixListWorker(multiprocessing.Process, PrefixListBase):
     def get_policies(self):
         """Get the list of valid policy names from RPTK."""
         url_path = "/policies"
-        self.info("Trying to get policy data from {}".format(url_path))
+        self.info(f"Trying to get policy data from {url_path}")
         policies = self.rptk_request(url_path)
-        self.debug("Got policies: {}".format(policies.keys()))
+        self.debug(f"Got policies: {policies.keys()}")
         return policies
 
     def get_data(self, configured):
@@ -174,38 +173,36 @@ class PrefixListWorker(multiprocessing.Process, PrefixListBase):
 
     def get_data_bulk(self, policy, objs):
         """Get IRR data in bulk."""
-        url_path = "/json/query?policy={}&".format(policy) + \
-                   "&".join(["objects={}".format(obj) for obj in objs])
-        self.info("Trying to get prefix data from {}".format(url_path))
+        url_path = f"/json/query?policy={policy}&" + \
+                   "&".join([f"objects={obj}" for obj in objs])
+        self.info(f"Trying to get prefix data from {url_path}")
         result = self.rptk_request(url_path)
         self.debug("Got prefix data")
         return result
 
     def get_data_obj(self, policy, obj):
         """Get IRR data for a single object."""
-        url_path = "/json/{}/{}".format(obj, policy)
-        self.info("Trying to get prefix data from {}".format(url_path))
+        url_path = f"/json/{obj}/{policy}"
+        self.info(f"Trying to get prefix data from {url_path}")
         result = self.rptk_request(url_path)
         self.debug("Got prefix data")
         return result
 
-    # TODO: include list of written prefix-lists, to give to 'refresh_all()'
     def write_results(self, configured, data):
         """Write prefix-list data to files."""
         stats = {"succeeded": 0, "failed": 0}
         written_objs = set()
         for policy, objs in configured.items():
-            self.info("Writing files for policy {}".format(policy))
+            self.info(f"Writing files for policy {policy}")
             if not objs:
-                self.info("No objects with policy: {}".format(policy))
+                self.info(f"No objects with policy: {policy}")
                 continue
             policy_dir = os.path.join(self.path, policy)
             if not os.path.isdir(policy_dir):
-                self.info("Creating directory {}".format(policy_dir))
+                self.info(f"Creating directory {policy_dir}")
                 os.makedirs(policy_dir)
             for obj, config in objs.items():
-                self.info("Trying to write files for {}/{}"
-                          .format(obj, policy))
+                self.info(f"Trying to write files for {obj}/{policy}")
                 if obj in data[policy]:
                     for afi, file in config.items():
                         path = os.path.join(policy_dir, file)
@@ -218,20 +215,19 @@ class PrefixListWorker(multiprocessing.Process, PrefixListBase):
                         stats["succeeded"] += 1
                         written_objs.add(obj)
                 else:
-                    self.warning("No prefix data for {}/{}"
-                                 .format(obj, policy))
+                    self.warning(f"No prefix data for {obj}/{policy}")
                     stats["failed"] += len(config)
         return stats, written_objs
 
     def write_prefix_list(self, path, entries, afi):
         """Write prefix-list to file."""
-        self.info("Trying to write {}".format(path))
+        self.info(f"Trying to write {path}")
         try:
             with open(path, "w") as f:
                 for i, p in enumerate(entries):
                     f.write(self.prefix_list_line(i, p))
         except Exception as e:
-            self.err("Failed to write {}: {}".format(path, e))
+            self.err(f"Failed to write {path}: {e}")
             raise e
 
     def prefix_list_line(self, index, entry):
@@ -247,18 +243,17 @@ class PrefixListWorker(multiprocessing.Process, PrefixListBase):
 
     def eapi_request(self, cmd, result_node, allow_empty=False):
         """Get call an enable-mode eAPI command."""
-        self.debug("Calling eAPI command {}".format(cmd))
+        self.debug(f"Calling eAPI command {cmd}")
         try:
             resp = self.eapi.run_show_cmd(cmd)
         except Exception as e:
-            self.err("eAPI request failed: {}".format(e))
+            self.err(f"eAPI request failed: {e}")
             raise e
         if resp.success():
             data = self.json_load(resp.responses()[0])
         else:
-            e = RuntimeError("eAPI request failed: {} ({})"
-                             .format(resp.error_message(),
-                                     resp.error_code()))
+            e = RuntimeError(f"eAPI request failed: {resp.error_message()} "
+                             f"({resp.error_code()})")
             self.err(e)
             raise e
         try:
@@ -267,7 +262,7 @@ class PrefixListWorker(multiprocessing.Process, PrefixListBase):
             if allow_empty:
                 result = {}
             else:
-                self.err("Failed to get result data: {}".format(e))
+                self.err(f"Failed to get result data: {e}")
                 raise e
         self.debug("eAPI request successful")
         return result
@@ -276,23 +271,23 @@ class PrefixListWorker(multiprocessing.Process, PrefixListBase):
         """Perform a query against the RPTK endpoint."""
         url = "{}/{}".format(self.endpoint.rstrip("/"),
                              url_path.lstrip("/"))
-        self.debug("Querying RPTK endpoint at {}".format(url))
+        self.debug(f"Querying RPTK endpoint at {url}")
         try:
-            resp = urllib2.urlopen(url)
-        except urllib2.HTTPError as e:
-            self.err("Request failed: {} {}".format(e.code, e.reason))
+            resp = urllib.request.urlopen(url)
+        except urllib.error.HTTPError as e:
+            self.err(f"Request failed: {e.code} {e.reason}")
             raise e
-        except urllib2.URLError as e:
-            self.err("Request failed: {}".format(e))
+        except urllib.error.URLError as e:
+            self.err(f"Request failed: {e}")
             raise e
-        self.debug("Request successful: {}".format(resp.getcode()))
+        self.debug(f"Request successful: {resp.getcode()}")
         result = self.json_load(resp)
         return result
 
     def json_load(self, obj):
         """Deserialise JSON from a string or file-like object."""
         def fail(e):
-            self.err("Failed to deserialise response: {}".format(e))
+            self.err(f"Failed to deserialise response: {e}")
             raise e
 
         self.debug("Deserialising JSON response")

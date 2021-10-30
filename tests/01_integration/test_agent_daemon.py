@@ -11,8 +11,6 @@
 # the License.
 """Integration tests for PrefixListAgent."""
 
-from __future__ import print_function
-
 import re
 import time
 
@@ -28,7 +26,7 @@ class TestPrefixListAgentDaemon(object):
 
     def test_running(self, node):
         """Test that the agent is running."""
-        resp = node.enable("show daemon {}".format(NAME))
+        resp = node.enable(f"show daemon {NAME}")
         status = resp[0]["result"]["daemons"]
         assert NAME in status
         assert status[NAME]["isSdkAgent"]
@@ -56,7 +54,7 @@ class TestPrefixListAgentDaemon(object):
             }
         }
         time.sleep(15)
-        responses = node.enable(["show {} prefix-list".format(config_af)
+        responses = node.enable([f"show {config_af} prefix-list"
                                  for config_af in ("ip", "ipv6")])
         entry_pattern = r"^\s+seq \d+ permit (?P<p>[\w.:/]+)( ge (?P<ge>\d+))?( le (?P<le>\d+))?$"  # noqa: E501
         entry_regexp = re.compile(entry_pattern)
@@ -64,8 +62,7 @@ class TestPrefixListAgentDaemon(object):
             for resp in responses:
                 assert obj in resp["result"]["ipPrefixLists"]
             for config_af, afi in (("ip", "ipv4"), ("ipv6", "ipv6")):
-                resp = node.enable("show {} prefix-list {} detail"
-                                   .format(config_af, obj),
+                resp = node.enable(f"show {config_af} prefix-list {obj} detail",  # noqa: E501
                                    encoding="text")
                 output = resp[0]["result"]["output"]
                 entries = [m.groupdict() for m in
@@ -79,7 +76,7 @@ class TestPrefixListAgentDaemon(object):
                                                       for e in entries]
                         assert item["greater-equal"] in [int(e["ge"])
                                                          for e in entries]
-        status_resp = node.enable("show daemon {}".format(NAME))
+        status_resp = node.enable(f"show daemon {NAME}")
         status = status_resp[0]["result"]["daemons"]
         assert NAME in status
         assert status[NAME]["data"]["result"] == "ok"

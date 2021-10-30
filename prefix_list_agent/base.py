@@ -11,8 +11,6 @@
 # the License.
 """prefix_list_agent base class."""
 
-from __future__ import print_function
-
 import eossdk
 
 
