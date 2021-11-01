@@ -17,42 +17,42 @@ import eossdk
 class PrefixListBase(object):
     """Base class that implements tracing."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialise a PrefixListBase instance."""
         self.tracer = eossdk.Tracer(self.__class__.__name__)
 
-    def _trace(self, msg, level=0):
+    def _trace(self, msg: object, level: int = 0) -> None:
         """Write tracing output."""
         self.tracer.trace(level, str(msg))
 
-    def emerg(self, msg):
+    def emerg(self, msg: object) -> None:
         """Write trace output at 'emergency' (0) level."""
         self._trace(msg, level=0)
 
-    def alert(self, msg):
+    def alert(self, msg: object) -> None:
         """Write trace output at 'alert' (1) level."""
         self._trace(msg, level=1)
 
-    def crit(self, msg):
+    def crit(self, msg: object) -> None:
         """Write trace output at 'critical' (2) level."""
         self._trace(msg, level=2)
 
-    def err(self, msg):
+    def err(self, msg: object) -> None:
         """Write trace output at 'error' (3) level."""
         self._trace(msg, level=3)
 
-    def warning(self, msg):
+    def warning(self, msg: object) -> None:
         """Write trace output at 'warning' (4) level."""
         self._trace(msg, level=4)
 
-    def notice(self, msg):
+    def notice(self, msg: object) -> None:
         """Write trace output at 'notice' (5) level."""
         self._trace(msg, level=5)
 
-    def info(self, msg):
+    def info(self, msg: object) -> None:
         """Write trace output at 'informational' (6) level."""
         self._trace(msg, level=6)
 
-    def debug(self, msg):
+    def debug(self, msg: object) -> None:
         """Write trace output at 'debug' (7) level."""
         self._trace(msg, level=7)

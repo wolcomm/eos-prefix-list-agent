@@ -13,10 +13,12 @@
 
 import sys
 
-from prefix_list_agent import PrefixListAgent
+import eossdk
+
+from . import PrefixListAgent
 
 
-def start(sdk):
+def start(sdk: eossdk.Sdk) -> int:
     """Start the agent."""
     try:
         # create a Sysdb mount profile, restarting if necessary
@@ -32,4 +34,4 @@ def start(sdk):
         return 130
     except Exception:
         raise
-    return
+    return 0

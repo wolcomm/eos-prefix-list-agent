@@ -15,9 +15,9 @@ import logging
 
 import prefix_list_agent.__meta__  # noqa
 
-from prefix_list_agent.agent import PrefixListAgent
-from prefix_list_agent.cli import start
+from .agent import PrefixListAgent
+from .cli import start
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
-__all__ = [PrefixListAgent.__name__, start.__name__]
+__all__ = ["PrefixListAgent", "start"]

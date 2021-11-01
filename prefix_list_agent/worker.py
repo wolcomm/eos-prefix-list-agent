@@ -19,11 +19,17 @@ import re
 import signal
 import sys
 import time
+import typing
 import urllib.error
 import urllib.request
 
-from prefix_list_agent.base import PrefixListBase
-from prefix_list_agent.exceptions import handle_sigterm, TermException
+import eossdk
+
+from .base import PrefixListBase
+from .exceptions import handle_sigterm, TermException
+from .types import (Configured, Data, EapiResponse, Objects, Policies,
+                    RptkPrefixes, RptkPrefixEntries, RptkPrefixEntry,
+                    RptkResult, Stats)
 
 PATH_RE = r"^file:{}/(?P<policy>\w+)/(?P<file>[-.:\w]+)$"
 
@@ -31,7 +37,13 @@ PATH_RE = r"^file:{}/(?P<policy>\w+)/(?P<file>[-.:\w]+)$"
 class PrefixListWorker(multiprocessing.Process, PrefixListBase):
     """Worker to fetch and process IRR data."""
 
-    def __init__(self, endpoint, path, eapi, update_delay, *args, **kwargs):
+    def __init__(self,
+                 endpoint: str,
+                 path: str,
+                 eapi: eossdk.EapiMgr,
+                 update_delay: typing.Optional[int],
+                 *args: typing.Any,
+                 **kwargs: typing.Any) -> None:
         """Initialise an PrefixListWorker instance."""
         super(PrefixListWorker, self).__init__(*args, **kwargs)
         PrefixListBase.__init__(self)
@@ -44,26 +56,26 @@ class PrefixListWorker(multiprocessing.Process, PrefixListBase):
         self._p_data, self._c_data = multiprocessing.Pipe(duplex=False)
 
     @property
-    def p_err(self):
-        """Get 'p_err' property."""
+    def p_err(self) -> multiprocessing.connection.Connection:
+        """Get 'p_err' connection."""
         return self._p_err
 
     @property
-    def c_err(self):
-        """Get 'c_err' property."""
+    def c_err(self) -> multiprocessing.connection.Connection:
+        """Get 'c_err' connection."""
         return self._c_err
 
     @property
-    def p_data(self):
-        """Get 'p_data' property."""
+    def p_data(self) -> multiprocessing.connection.Connection:
+        """Get 'p_data' connection."""
         return self._p_data
 
     @property
-    def c_data(self):
-        """Get 'c_data' property."""
+    def c_data(self) -> multiprocessing.connection.Connection:
+        """Get 'c_data' connection."""
         return self._c_data
 
-    def run(self):
+    def run(self) -> None:
         """Run the worker process."""
         self.info("Worker started")
         signal.signal(signal.SIGTERM, handle_sigterm)
@@ -88,9 +100,10 @@ class PrefixListWorker(multiprocessing.Process, PrefixListBase):
             self.c_err.close()
             self.c_data.close()
 
-    def get_configured(self, policies):
+    def get_configured(self, policies: Policies) -> Configured:
         """Get the prefix-lists in running-config."""
-        configured = {p: collections.defaultdict(dict) for p in policies}
+        configured: Configured = {p: collections.defaultdict(dict)
+                                  for p in policies}
         self.info("Searching for prefix-lists with "
                   f"source matching {self.path_re.pattern}")
         for afi, cmd in (("ipv4", "show ip prefix-list"),
@@ -115,7 +128,9 @@ class PrefixListWorker(multiprocessing.Process, PrefixListBase):
                     self.debug("No match")
         return configured
 
-    def refresh_prefix_list(self, afi, prefix_list=None):
+    def refresh_prefix_list(self,
+                            afi: str,
+                            prefix_list: typing.Optional[str] = None) -> None:
         """Refresh all prefix-lists or a single named prefix-list."""
         cmd = f"refresh {afi} prefix-list"
         if prefix_list is not None:
@@ -126,7 +141,7 @@ class PrefixListWorker(multiprocessing.Process, PrefixListBase):
             for submsg in msg.replace("\nNum", " -").rstrip().split("\n"):
                 self.info(submsg)
 
-    def refresh_all(self, written_objs):
+    def refresh_all(self, written_objs: typing.Iterable[str]) -> None:
         """Refresh prefix-lists."""
         self.info("Refreshing source-based prefix-lists")
         for afi in ("ip", "ipv6"):
@@ -138,15 +153,15 @@ class PrefixListWorker(multiprocessing.Process, PrefixListBase):
                     time.sleep(self.update_delay)
         self.notice("Prefix-lists refreshed successfully")
 
-    def get_policies(self):
+    def get_policies(self) -> Policies:
         """Get the list of valid policy names from RPTK."""
         url_path = "/policies"
         self.info(f"Trying to get policy data from {url_path}")
         policies = self.rptk_request(url_path)
         self.debug(f"Got policies: {policies.keys()}")
-        return policies
+        return typing.cast(Policies, policies)
 
-    def get_data(self, configured):
+    def get_data(self, configured: Configured) -> Data:
         """Get IRR data for the configured prefix-list objects."""
         data = dict()
         self.info("Querying for IRR data")
@@ -171,24 +186,28 @@ class PrefixListWorker(multiprocessing.Process, PrefixListBase):
                 data[policy].update(result)
         return data
 
-    def get_data_bulk(self, policy, objs):
+    def get_data_bulk(self,
+                      policy: str,
+                      objs: typing.Iterable[str]) -> RptkPrefixes:
         """Get IRR data in bulk."""
         url_path = f"/json/query?policy={policy}&" + \
                    "&".join([f"objects={obj}" for obj in objs])
         self.info(f"Trying to get prefix data from {url_path}")
         result = self.rptk_request(url_path)
         self.debug("Got prefix data")
-        return result
+        return typing.cast(RptkPrefixes, result)
 
-    def get_data_obj(self, policy, obj):
+    def get_data_obj(self, policy: str, obj: str) -> RptkPrefixes:
         """Get IRR data for a single object."""
         url_path = f"/json/{obj}/{policy}"
         self.info(f"Trying to get prefix data from {url_path}")
         result = self.rptk_request(url_path)
         self.debug("Got prefix data")
-        return result
+        return typing.cast(RptkPrefixes, result)
 
-    def write_results(self, configured, data):
+    def write_results(self,
+                      configured: Configured,
+                      data: Data) -> typing.Tuple[Stats, Objects]:
         """Write prefix-list data to files."""
         stats = {"succeeded": 0, "failed": 0}
         written_objs = set()
@@ -219,7 +238,10 @@ class PrefixListWorker(multiprocessing.Process, PrefixListBase):
                     stats["failed"] += len(config)
         return stats, written_objs
 
-    def write_prefix_list(self, path, entries, afi):
+    def write_prefix_list(self,
+                          path: str,
+                          entries: RptkPrefixEntries,
+                          afi: str) -> None:
         """Write prefix-list to file."""
         self.info(f"Trying to write {path}")
         try:
@@ -230,7 +252,7 @@ class PrefixListWorker(multiprocessing.Process, PrefixListBase):
             self.err(f"Failed to write {path}: {e}")
             raise e
 
-    def prefix_list_line(self, index, entry):
+    def prefix_list_line(self, index: int, entry: RptkPrefixEntry) -> str:
         """Generate a line in a prefix-list."""
         line = "seq {} permit {}".format(index + 1, entry["prefix"])
         if not entry["exact"]:
@@ -241,7 +263,10 @@ class PrefixListWorker(multiprocessing.Process, PrefixListBase):
         line += "\n"
         return line
 
-    def eapi_request(self, cmd, result_node, allow_empty=False):
+    def eapi_request(self,
+                     cmd: str,
+                     result_node: str,
+                     allow_empty: bool = False) -> EapiResponse:
         """Get call an enable-mode eAPI command."""
         self.debug(f"Calling eAPI command {cmd}")
         try:
@@ -252,10 +277,10 @@ class PrefixListWorker(multiprocessing.Process, PrefixListBase):
         if resp.success():
             data = self.json_load(resp.responses()[0])
         else:
-            e = RuntimeError(f"eAPI request failed: {resp.error_message()} "
-                             f"({resp.error_code()})")
-            self.err(e)
-            raise e
+            err = RuntimeError(f"eAPI request failed: {resp.error_message()} "
+                               f"({resp.error_code()})")
+            self.err(err)
+            raise err
         try:
             result = data[result_node]
         except KeyError as e:
@@ -267,7 +292,7 @@ class PrefixListWorker(multiprocessing.Process, PrefixListBase):
         self.debug("eAPI request successful")
         return result
 
-    def rptk_request(self, url_path):
+    def rptk_request(self, url_path: str) -> RptkResult:
         """Perform a query against the RPTK endpoint."""
         url = "{}/{}".format(self.endpoint.rstrip("/"),
                              url_path.lstrip("/"))
@@ -282,23 +307,24 @@ class PrefixListWorker(multiprocessing.Process, PrefixListBase):
             raise e
         self.debug(f"Request successful: {resp.getcode()}")
         result = self.json_load(resp)
-        return result
+        return typing.cast(RptkResult, result)
 
-    def json_load(self, obj):
+    def json_load(self,
+                  obj: typing.Union[str, typing.TextIO]) -> typing.Any:
         """Deserialise JSON from a string or file-like object."""
-        def fail(e):
+        def fail(e: Exception) -> None:
             self.err(f"Failed to deserialise response: {e}")
             raise e
 
         self.debug("Deserialising JSON response")
         try:
             self.debug("Trying 'json.load' method")
-            result = json.load(obj)
+            result = json.load(typing.cast(typing.TextIO, obj))
         except AttributeError:
             self.debug("Object has no 'read' method")
             self.debug("Trying 'json.loads' method")
             try:
-                result = json.loads(obj)
+                result = json.loads(typing.cast(str, obj))
             except Exception as e:
                 fail(e)
         except Exception as e:
@@ -307,13 +333,15 @@ class PrefixListWorker(multiprocessing.Process, PrefixListBase):
         return result
 
     @property
-    def data(self):
+    def data(self) -> typing.Optional[Stats]:
         """Get data from the worker."""
         if self.p_data.poll():
-            return self.p_data.recv()
+            return typing.cast(Stats, self.p_data.recv())
+        return None
 
     @property
-    def error(self):
+    def error(self) -> typing.Optional[Exception]:
         """Get exception raised by worker."""
         if self.p_err.poll():
-            return self.p_err.recv()
+            return typing.cast(Exception, self.p_err.recv())
+        return None

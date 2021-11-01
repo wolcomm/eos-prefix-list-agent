@@ -14,18 +14,21 @@
 import collections.abc
 import datetime
 import filecmp
+import multiprocessing
 import os
 import platform
 import shutil
 import signal
 import tempfile
+import typing
 
 import eossdk
 
-from prefix_list_agent.base import PrefixListBase
-from prefix_list_agent.worker import PrefixListWorker
+from .base import PrefixListBase
+from .worker import PrefixListWorker
 
 
+# mypy: allow-subclassing-any
 class PrefixListAgent(PrefixListBase, eossdk.AgentHandler,
                       eossdk.TimeoutHandler, eossdk.FdHandler):
     """An EOS SDK based agent that creates prefix-list policy objects."""
@@ -35,7 +38,7 @@ class PrefixListAgent(PrefixListBase, eossdk.AgentHandler,
                      "update_delay")
 
     @classmethod
-    def set_sysdb_mp(cls, name):
+    def set_sysdb_mp(cls, name: str) -> bool:
         """Create the SysdbMountProfiles file for the agent."""
         # set the path
         arch = platform.architecture()[0]
@@ -61,7 +64,7 @@ class PrefixListAgent(PrefixListBase, eossdk.AgentHandler,
             shutil.copy(tmp.name, profile_path)
         return True
 
-    def __init__(self, sdk):
+    def __init__(self, sdk: eossdk.Sdk):
         """Initialise the agent instance."""
         # Set up tracing
         PrefixListBase.__init__(self)
@@ -74,46 +77,46 @@ class PrefixListAgent(PrefixListBase, eossdk.AgentHandler,
         eossdk.TimeoutHandler.__init__(self, self.timeout_mgr)
         eossdk.FdHandler.__init__(self)
         # set worker process to None
-        self.worker = None
-        self.watching = set()
+        self._worker: typing.Optional[PrefixListWorker] = None
+        self.watching: typing.Set[multiprocessing.connection.Connection] = set()  #noqa: E501
         # set default confg options
-        self._rptk_endpoint = None
+        self._rptk_endpoint: typing.Optional[str] = None
         self._source_dir = "/tmp/prefix-lists"
         self._refresh_interval = 3600
-        self._update_delay = None
+        self._update_delay: typing.Optional[int] = None
         # create state containers
-        self._status = None
-        self._last_start = None
-        self._last_end = None
-        self._result = None
+        self._status: typing.Optional[str] = None
+        self._last_start: typing.Optional[datetime.datetime] = None
+        self._last_end: typing.Optional[datetime.datetime] = None
+        self._result: typing.Optional[str] = None
 
     @property
-    def rptk_endpoint(self):
+    def rptk_endpoint(self) -> typing.Optional[str]:
         """Get 'rptk_endpoint' property."""
         return self._rptk_endpoint
 
     @rptk_endpoint.setter
-    def rptk_endpoint(self, url):
+    def rptk_endpoint(self, url: str) -> None:
         """Set 'rptk_endpoint' property."""
         self._rptk_endpoint = url
 
     @property
-    def source_dir(self):
+    def source_dir(self) -> str:
         """Get 'source_dir' property."""
         return self._source_dir
 
     @source_dir.setter
-    def source_dir(self, path):
+    def source_dir(self, path: str) -> None:
         """Set 'source_dir' property."""
         self._source_dir = path
 
     @property
-    def refresh_interval(self):
+    def refresh_interval(self) -> int:
         """Get 'refresh_interval' property."""
         return self._refresh_interval
 
     @refresh_interval.setter
-    def refresh_interval(self, i):
+    def refresh_interval(self, i: int) -> None:
         """Set 'refresh_interval' property."""
         i = int(i)
         if i in range(10, 86400):
@@ -122,12 +125,12 @@ class PrefixListAgent(PrefixListBase, eossdk.AgentHandler,
             raise ValueError("refresh_interval must be in range 1 - 86399")
 
     @property
-    def update_delay(self):
+    def update_delay(self) -> typing.Optional[int]:
         """Get 'update_delay' property."""
         return self._update_delay
 
     @update_delay.setter
-    def update_delay(self, i):
+    def update_delay(self, i: typing.Optional[int]) -> None:
         """Set 'update_delay' property."""
         if i is not None:
             i = int(i)
@@ -136,36 +139,36 @@ class PrefixListAgent(PrefixListBase, eossdk.AgentHandler,
         self._update_delay = i
 
     @property
-    def status(self):
+    def status(self) -> typing.Optional[str]:
         """Get 'status' property."""
         return self._status
 
     @status.setter
-    def status(self, s):
+    def status(self, s: str) -> None:
         """Set 'status' property."""
         self._status = s
         self.agent_mgr.status_set("status", self.status)
         self.info("Status: {}".format(self.status))
 
     @property
-    def result(self):
+    def result(self) -> typing.Optional[str]:
         """Get 'result' property."""
         return self._result
 
     @result.setter
-    def result(self, r):
+    def result(self, r: str) -> None:
         """Set 'result' property."""
         self._result = r
         self.agent_mgr.status_set("result", self.result)
         self.notice(f"Result: {self.result}")
 
     @property
-    def last_start(self):
+    def last_start(self) -> typing.Optional[datetime.datetime]:
         """Set the 'last_start' timestamp."""
         return self._last_start
 
     @last_start.setter
-    def last_start(self, ts):
+    def last_start(self, ts: datetime.datetime) -> None:
         """Set the 'last_start' timestamp."""
         if not isinstance(ts, datetime.datetime):
             raise TypeError(f"Expected datetime.datetime, got {ts}")
@@ -174,12 +177,12 @@ class PrefixListAgent(PrefixListBase, eossdk.AgentHandler,
         self.info(f"Last start: {ts}")
 
     @property
-    def last_end(self):
+    def last_end(self) -> typing.Optional[datetime.datetime]:
         """Set the 'last_end' timestamp."""
         return self._last_end
 
     @last_end.setter
-    def last_end(self, ts):
+    def last_end(self, ts: datetime.datetime) -> None:
         """Set the 'last_end' timestamp."""
         if not isinstance(ts, datetime.datetime):
             raise TypeError(f"Expected datetime.datetime, got {ts}")
@@ -187,14 +190,21 @@ class PrefixListAgent(PrefixListBase, eossdk.AgentHandler,
         self.agent_mgr.status_set("last_end", str(self.last_end))
         self.info(f"Last end: {ts}")
 
-    def configure(self):
+    @property
+    def worker(self) -> PrefixListWorker:
+        """Get active worker process."""
+        if self._worker is None:
+            raise RuntimeError("attempted to access uninitialized worker.")
+        return self._worker
+
+    def configure(self) -> None:
         """Read and set all configuration options."""
         self.info("Reading configuration options")
         for key in self.agent_mgr.agent_option_iter():
             value = self.agent_mgr.agent_option(key)
             self.set(key, value)
 
-    def set(self, key, value):
+    def set(self, key: str, value: typing.Any) -> None:
         """Set a configuration option."""
         if not value:
             value = None
@@ -204,26 +214,27 @@ class PrefixListAgent(PrefixListBase, eossdk.AgentHandler,
         else:
             self.warning(f"Ignoring unknown option '{key}'")
 
-    def start(self):
+    def start(self) -> None:
         """Start up the agent."""
         self.status = "init"
         self.configure()
         self.init()
         self.run()
 
-    def init(self):  # pragma: no cover
+    def init(self) -> None:  # pragma: no cover
         """Perform one-time start actions."""
         pass
 
-    def init_worker(self):
+    def init_worker(self) -> None:
         """Create a worker instance."""
         self.info("Initialising worker")
-        self.worker = PrefixListWorker(endpoint=self.rptk_endpoint,
-                                       path=self.source_dir,
-                                       eapi=self.eapi_mgr,
-                                       update_delay=self.update_delay)
+        assert self.rptk_endpoint is not None
+        self._worker = PrefixListWorker(endpoint=self.rptk_endpoint,
+                                        path=self.source_dir,
+                                        eapi=self.eapi_mgr,
+                                        update_delay=self.update_delay)
 
-    def run(self):
+    def run(self) -> None:
         """Spawn worker process."""
         self.status = "running"
         if self.rptk_endpoint is not None:
@@ -242,7 +253,9 @@ class PrefixListAgent(PrefixListBase, eossdk.AgentHandler,
             self.warning("'rptk_endpoint' is not set")
             self.sleep()
 
-    def watch(self, conn, typ):
+    def watch(self,
+              conn: multiprocessing.connection.Connection,
+              typ: str) -> None:
         """Watch a Connection for new data."""
         self.info(f"Trying to watch for {typ} data on {conn}")
         fileno = conn.fileno()
@@ -250,7 +263,9 @@ class PrefixListAgent(PrefixListBase, eossdk.AgentHandler,
         self.watching.add(conn)
         self.info(f"Watching {conn} for {typ} data")
 
-    def unwatch(self, conn, close=False):
+    def unwatch(self,
+                conn: multiprocessing.connection.Connection,
+                close: bool = False) -> None:
         """Stop watching a Connection for new data."""
         self.info(f"Trying to remove watch on {conn}")
         fileno = conn.fileno()
@@ -262,21 +277,26 @@ class PrefixListAgent(PrefixListBase, eossdk.AgentHandler,
             self.info(f"Closing connection {conn}")
             conn.close()
 
-    def success(self):
+    def success(self) -> None:
         """Report statistics and restart refresh_interval timer."""
         self.status = "finalising"
         self.info("Receiving results from worker")
         stats = self.worker.data
-        self.report(**stats)
+        if stats is not None:
+            self.report(**stats)
         self.result = "ok"
         self.last_end = datetime.datetime.now()
         self.cleanup(process=self.worker)
         self.sleep()
 
-    def failure(self, err=None, process=None, restart=False):
+    def failure(self,
+                err: typing.Optional[Exception] = None,
+                process: typing.Optional[PrefixListWorker] = None,
+                restart: bool = False) -> None:
         """Handle worker exception."""
         self.status = "error"
         if err is None:
+            assert process is not None
             try:
                 err = process.error
             except Exception as e:
@@ -289,16 +309,17 @@ class PrefixListAgent(PrefixListBase, eossdk.AgentHandler,
         if restart:
             self.restart()
         else:
-            self.cleanup(process=process)
+            if process is not None:
+                self.cleanup(process=process)
             self.sleep()
 
-    def report(self, **stats):
+    def report(self, **stats: int) -> None:
         """Report statistics to the agent manager."""
         for name, value in stats.items():
             self.info(f"{name}: {value}")
             self.agent_mgr.status_set(name, str(value))
 
-    def cleanup(self, process):
+    def cleanup(self, process: PrefixListWorker) -> None:
         """Kill the process if it is still running."""
         self.status = "cleanup"
         process_name = process.__class__.__name__
@@ -311,6 +332,8 @@ class PrefixListAgent(PrefixListBase, eossdk.AgentHandler,
                          if isinstance(c, collections.abc.Hashable)
                          and c in self.watching]:
                 try:
+                    assert isinstance(conn,
+                                      multiprocessing.connection.Connection)
                     self.unwatch(conn, close=True)
                 except Exception as e:
                     self.err(e)
@@ -326,15 +349,16 @@ class PrefixListAgent(PrefixListBase, eossdk.AgentHandler,
             if process.is_alive():
                 self.notice(f"Timeout waiting for {process_name}. "
                             "Sending SIGKILL")
-                os.kill(process.pid, signal.SIGKILL)
+                if process.pid is not None:
+                    os.kill(process.pid, signal.SIGKILL)
         self.info("Cleanup complete")
 
-    def sleep(self):
+    def sleep(self) -> None:
         """Go to sleep for 'refresh_interval' seconds."""
         self.status = "sleeping"
         self.timeout_time_is(eossdk.now() + self.refresh_interval)
 
-    def shutdown(self):
+    def shutdown(self) -> None:
         """Shutdown the agent gracefully."""
         self.notice("Shutting down")
         try:
@@ -344,7 +368,7 @@ class PrefixListAgent(PrefixListBase, eossdk.AgentHandler,
         self.status = "shutdown"
         self.agent_mgr.agent_shutdown_complete_is(True)
 
-    def restart(self):
+    def restart(self) -> None:
         """Restart the agent."""
         self.notice("Restarting")
         self.status = "restarting"
@@ -354,15 +378,15 @@ class PrefixListAgent(PrefixListBase, eossdk.AgentHandler,
             self.err(e)
         self.start()
 
-    def on_initialized(self):
+    def on_initialized(self) -> None:
         """Start the agent after initialisation."""
         self.start()
 
-    def on_agent_option(self, key, value):
+    def on_agent_option(self, key: str, value: str) -> None:
         """Handle a change to a configuration option."""
         self.set(key, value)
 
-    def on_agent_enabled(self, enabled):
+    def on_agent_enabled(self, enabled: bool) -> None:
         """Handle a change in the admin state of the agent."""
         if enabled:
             self.notice("Agent enabled")
@@ -370,11 +394,11 @@ class PrefixListAgent(PrefixListBase, eossdk.AgentHandler,
             self.notice("Agent disabled")
             self.shutdown()
 
-    def on_timeout(self):
+    def on_timeout(self) -> None:
         """Handle a 'refresh_interval' timeout."""
         self.run()
 
-    def on_readable(self, fd):
+    def on_readable(self, fd: int) -> None:
         """Handle a watched file descriptor becoming readable."""
         self.info(f"Watched file descriptor {fd} is readable")
         if fd == self.worker.p_data.fileno():

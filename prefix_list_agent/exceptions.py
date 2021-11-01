@@ -11,6 +11,10 @@
 # the License.
 """prefix_list_agent custom execptions."""
 
+import signal
+import types
+import typing
+
 
 class TermException(BaseException):
     """Raised when SIGTERM is handled by handle_sigterm."""
@@ -18,6 +22,7 @@ class TermException(BaseException):
     pass
 
 
-def handle_sigterm(signum, frame):
+def handle_sigterm(signum: signal.Signals,
+                   frame: typing.Optional[types.FrameType]) -> None:
     """Handle a SIGTERM signal by raising custom exception."""
     raise TermException
