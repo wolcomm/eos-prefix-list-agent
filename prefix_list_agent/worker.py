@@ -14,6 +14,7 @@
 import collections
 import json
 import multiprocessing
+import multiprocessing.connection
 import os
 import re
 import signal

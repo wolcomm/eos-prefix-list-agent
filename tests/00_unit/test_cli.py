@@ -31,7 +31,7 @@ class TestCli(object):
                              autospec=True)
 
     @pytest.mark.parametrize(("arg", "ret"),
-                             ((None, None), (KeyboardInterrupt, 130),
+                             ((None, 0), (KeyboardInterrupt, 130),
                               (RuntimeError, RuntimeError)))
     @pytest.mark.parametrize("sysdb_mp_written", (True, False))
     def test_start(self, sdk, mocker, arg, ret, sysdb_mp_written):
@@ -43,7 +43,7 @@ class TestCli(object):
         if sysdb_mp_written:
             assert start(sdk) == 64
         else:
-            if not isinstance(ret, type):
+            if isinstance(ret, int):
                 assert start(sdk) == ret
             else:
                 with pytest.raises(ret):

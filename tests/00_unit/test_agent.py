@@ -186,40 +186,40 @@ class TestPrefixListAgent(object):
         mock_worker = mocker.patch("prefix_list_agent.agent.PrefixListWorker",
                                    autospec=True)
         mock_worker.return_value.data = stats
-        agent.worker = mock_worker(endpoint=agent.rptk_endpoint,
-                                   path=agent.source_dir,
-                                   eapi=agent.eapi_mgr,
-                                   update_delay=agent.update_delay)
+        agent._worker = mock_worker(endpoint=agent.rptk_endpoint,
+                                    path=agent.source_dir,
+                                    eapi=agent.eapi_mgr,
+                                    update_delay=agent.update_delay)
         agent.success()
         agent.report.assert_called_once_with(**stats)
         agent.cleanup.assert_called_once_with(process=agent.worker)
         agent.sleep.assert_called_once_with()
 
     @pytest.mark.parametrize("local_err", (None, RuntimeError("test_error")))
+    @pytest.mark.parametrize("worker_err", (None, RuntimeError("worker_err")))
     @pytest.mark.parametrize("worker_process", (True, False))
     @pytest.mark.parametrize("restart", (True, False))
-    def test_failure(self, agent, mocker, local_err, worker_process, restart):
+    def test_failure(self, agent, mocker, local_err, worker_err,
+                     worker_process, restart):
         """Test case for 'failure' method."""
         for method in ("err", "restart", "cleanup", "sleep"):
             mocker.patch.object(agent, method, autospec=True)
         mock_worker = mocker.patch("prefix_list_agent.agent.PrefixListWorker",
                                    autospec=True)
-        worker_err = RuntimeError("worker_err")
         mock_worker.return_value.error = worker_err
-        agent.worker = mock_worker(endpoint=agent.rptk_endpoint,
-                                   path=agent.source_dir,
-                                   eapi=agent.eapi_mgr,
-                                   update_delay=agent.update_delay)
+        agent._worker = mock_worker(endpoint=agent.rptk_endpoint,
+                                    path=agent.source_dir,
+                                    eapi=agent.eapi_mgr,
+                                    update_delay=agent.update_delay)
         if worker_process:
             process = agent.worker
         else:
             process = None
+            if local_err is None:
+                pytest.xfail()
         agent.failure(err=local_err, process=process, restart=restart)
         if local_err is None:
-            if process is None:
-                assert agent.err.call_count == 2
-            else:
-                agent.err.assert_called_once_with(worker_err)
+            agent.err.assert_called_once_with(worker_err)
         else:
             agent.err.assert_called_once_with(local_err)
         if restart:
@@ -277,22 +277,30 @@ class TestPrefixListAgent(object):
         agent.timeout_time_is.assert_called_once_with(agent.refresh_interval)
 
     @pytest.mark.parametrize("side_effect", ((None,), RuntimeError))
-    def test_shutdown(self, agent, mocker, side_effect):
+    @pytest.mark.parametrize("init_worker", (True, False))
+    def test_shutdown(self, agent, mocker, side_effect, init_worker):
         """Test case for 'shutdown' method."""
         mocker.patch.object(agent, "cleanup", autospec=True,
                             side_effect=side_effect)
+        if init_worker:
+            agent.init_worker()
         agent.shutdown()
-        agent.cleanup.assert_called_once_with(process=agent.worker)
+        if init_worker:
+            agent.cleanup.assert_called_once()
         agent.agent_mgr.agent_shutdown_complete_is.assert_called_once_with(True)  # noqa: E501
 
     @pytest.mark.parametrize("side_effect", ((None,), RuntimeError))
-    def test_restart(self, agent, mocker, side_effect):
+    @pytest.mark.parametrize("init_worker", (True, False))
+    def test_restart(self, agent, mocker, side_effect, init_worker):
         """Test case for 'restart' method."""
         mocker.patch.object(agent, "cleanup", autospec=True,
                             side_effect=side_effect)
         mocker.patch.object(agent, "start", autospec=True)
+        if init_worker:
+            agent.init_worker()
         agent.restart()
-        agent.cleanup.assert_called_once_with(process=agent.worker)
+        if init_worker:
+            agent.cleanup.assert_called_once()
         agent.start.assert_called_once_with()
 
     def test_on_initialized(self, agent, mocker):
@@ -332,10 +340,10 @@ class TestPrefixListAgent(object):
         mock_worker.return_value.p_err.fileno.return_value = 2
         for method in ("success", "failure", "warning"):
             mocker.patch.object(agent, method, autospec=True)
-        agent.worker = mock_worker(endpoint=agent.rptk_endpoint,
-                                   path=agent.source_dir,
-                                   eapi=agent.eapi_mgr,
-                                   update_delay=agent.update_delay)
+        agent._worker = mock_worker(endpoint=agent.rptk_endpoint,
+                                    path=agent.source_dir,
+                                    eapi=agent.eapi_mgr,
+                                    update_delay=agent.update_delay)
         agent.on_readable(fd)
         if fd == 1:
             agent.success.assert_called_once_with()

@@ -14,7 +14,7 @@
 import collections.abc
 import datetime
 import filecmp
-import multiprocessing
+import multiprocessing.connection
 import os
 import platform
 import shutil
@@ -297,20 +297,14 @@ class PrefixListAgent(PrefixListBase, eossdk.AgentHandler,
         self.status = "error"
         if err is None:
             assert process is not None
-            try:
-                err = process.error
-            except Exception as e:
-                self.err("Retreiving exception from {} failed"
-                         .format(process.__class__.__name__))
-                err = e
+            err = process.error
         self.err(err)
         self.result = "failed"
         self.last_end = datetime.datetime.now()
         if restart:
             self.restart()
         else:
-            if process is not None:
-                self.cleanup(process=process)
+            self.cleanup(process=process)
             self.sleep()
 
     def report(self, **stats: int) -> None:
@@ -319,7 +313,7 @@ class PrefixListAgent(PrefixListBase, eossdk.AgentHandler,
             self.info(f"{name}: {value}")
             self.agent_mgr.status_set(name, str(value))
 
-    def cleanup(self, process: PrefixListWorker) -> None:
+    def cleanup(self, process: typing.Optional[PrefixListWorker]) -> None:
         """Kill the process if it is still running."""
         self.status = "cleanup"
         process_name = process.__class__.__name__
