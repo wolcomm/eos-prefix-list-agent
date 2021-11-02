@@ -47,7 +47,7 @@ jobs:
       - name: setup python ${{ env.DEFAULT_PYTHON }}
         uses: actions/setup-python@v2
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: ${{ env.DEFAULT_PYTHON }}
       - name: install ${{ env.TOX_JOB }} job runner
         run: python -m pip install -r packaging/requirements-tox.txt
       - name: run ${{ env.TOX_JOB }} job
@@ -68,6 +68,9 @@ jobs:
     env:
       TOX_JOB: test
       CEOS_VERSION: ${{ matrix.ceos }}
+      AZURE_ACR_URI: "workonline.azurecr.io"
+      AZURE_ACR_TOKEN_NAME: "gh-actions-eos-prefix-list-agent"
+      AZURE_ACR_TOKEN: ${{ secrets.AZURE_ACR_TOKEN }}
     steps:
       - name: checkout
         uses: actions/checkout@v2
@@ -77,6 +80,11 @@ jobs:
           python-version: ${{ env.DEFAULT_PYTHON }}
       - name: install ${{ env.TOX_JOB }} job runner
         run: python -m pip install -r packaging/requirements-tox.txt
+      - name: login to azure acr
+        run: |
+          echo -n "${AZURE_ACR_TOKEN}" | docker login \
+              --username "${AZURE_ACR_TOKEN_NAME}" \
+              --password-stdin "${AZURE_ACR_URI}"
       - name: run ${{ env.TOX_JOB }} job
         run: tox
       - name: upload coverage report artifact
