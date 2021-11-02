@@ -67,7 +67,7 @@ CONTAINER_ID="$(docker run --detach --privileged --rm "${IMAGE_ID}")" &&
 
 # Run test suite
 echo "Running test suite"
-docker exec --interactive --tty "${CONTAINER_ID}" pytest "${PYTEST_ARGS}"
+docker exec --tty "${CONTAINER_ID}" pytest "${PYTEST_ARGS}"
 TEST_RESULT=$?
 
 # Retrieve coverage report
