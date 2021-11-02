@@ -1,0 +1,18 @@
+# install tox test runner
+-r requirements-tox.txt
+
+# install test environment requirements
+-r requirements-lint.txt
+-r requirements-safety.txt
+-r requirements-typecheck.txt
+-r requirements-test.txt
+
+## install docs generation requirements
+#-r requirements-docs.txt
+#
+## install packaging requirements
+#-r requirements-build.txt
+#-r requirements-pkg.txt
+#
+## install package in development mode
+#-e .

@@ -264,10 +264,12 @@ class TestPrefixListWorker(object):
         (urllib.request.addinfourl(url="/testing", code=200, headers=None,
                                    fp=io.StringIO('{"foo":"bar"}')),),
         pytest.param(urllib.error.URLError(reason="Testing"),
-                     marks=pytest.mark.xfail(raises=urllib.error.URLError)),
+                     marks=pytest.mark.xfail(raises=urllib.error.URLError),
+                     id="URLError"),
         pytest.param(urllib.error.HTTPError(url="/testing", code=500,
                                             msg="Testing", hdrs=None, fp=None),
-                     marks=pytest.mark.xfail(raises=urllib.error.HTTPError))
+                     marks=pytest.mark.xfail(raises=urllib.error.HTTPError),
+                     id="HTTPError")
     ))
     def test_rptk_request(self, mocker, worker, side_effect):
         """Test case for 'rptk_request' method."""

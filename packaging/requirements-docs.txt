@@ -1,0 +1,7 @@
+sphinx
+
+# sphinx extensions
+myst-parser
+
+# sphinx theme
+sphinx-readable-theme

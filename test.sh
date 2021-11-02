@@ -3,10 +3,11 @@
 DEFAULT_VERSION="4.26.1F"
 REGISTRY="workonline.azurecr.io"
 USAGE="$(cat <<EOF
-usage: $0 ([-d] [-v <version>] | -h)
-    -d              Drop into a bash shell on the cEOS container after testing.
-    -v <version>    Test on cEOS <version>. default: $DEFAULT_VERSION.
-    -h              Display this help message.
+usage: $0 ([-d] [-v <version>] [-t <pytest-args>] | -h)
+    -d                  Drop into a bash shell on the cEOS container after testing.
+    -v <version>        Test on cEOS <version>. default: $DEFAULT_VERSION.
+    -t <pytest-args>    Arguments to pass to pytest
+    -h                  Display this help message.
 EOF
 )"
 
@@ -29,13 +30,16 @@ clean() {
   fi
 }
 
-while getopts "dv:h" OPT; do
+while getopts "dv:t:h" OPT; do
     case $OPT in
         d)
             DEBUG=1
             ;;
         v)
             VERSION="$OPTARG"
+            ;;
+        t)
+            PYTEST_ARGS="$OPTARG"
             ;;
         h)
             echo "$USAGE"
@@ -63,7 +67,10 @@ CONTAINER_ID="$(docker run --detach --privileged --rm "${IMAGE_ID}")" &&
 
 # Run test suite
 echo "Running test suite"
-docker exec --interactive --tty "${CONTAINER_ID}" pytest
+docker exec --interactive --tty "${CONTAINER_ID}" pytest "${PYTEST_ARGS}"
+TEST_RESULT=$?
+
+# Retrieve coverage report
 echo -n "Retrieving coverage report"
 docker cp ${CONTAINER_ID}:/root/coverage.xml ./ >/dev/null &&
   ok || fail
@@ -77,4 +84,4 @@ fi
 # Clean up
 clean
 
-exit 0
+exit $TEST_RESULT
