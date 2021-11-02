@@ -18,14 +18,14 @@ import io
 import json
 import signal
 import time
+import unittest.mock
 import urllib.error
 import urllib.request
-import unittest.mock
-
-import pytest
 
 from prefix_list_agent.exceptions import TermException
 from prefix_list_agent.worker import PrefixListWorker
+
+import pytest
 
 
 class TestPrefixListWorker(object):
@@ -220,13 +220,13 @@ class TestPrefixListWorker(object):
         ([], None),
         ([{"prefix": "2001:db8:b00::/48", "exact": True},
          {"prefix": "2001:db8:f00::/48", "exact": True}], None),
-        pytest.param([], IOError, marks=pytest.mark.xfail(raises=IOError))
+        pytest.param([], IOError, marks=pytest.mark.xfail(raises=IOError)),
     ))
     def test_write_prefix_list(self, worker, mocker, entries, side_effect):
         """Test case for 'write_prefix_list' method."""
         m = mocker.patch("builtins.open", mocker.mock_open())
         m.side_effect = side_effect
-        path = "/tmp/foo"
+        path = "/tmp/foo"  # noqa: S108
         worker.write_prefix_list(path, entries, "ipv6")
         m.assert_called_once_with(path, "w")
         assert m().write.call_count == len(entries)
@@ -235,7 +235,7 @@ class TestPrefixListWorker(object):
         ({"prefix": "10.0.0.0/8", "exact": True}, "seq 1 permit 10.0.0.0/8\n"),
         ({"prefix": "2001:db8::/32", "exact": False,
           "greater-equal": 48, "less-equal": 64},
-         "seq 1 permit 2001:db8::/32 ge 48 le 64\n")
+         "seq 1 permit 2001:db8::/32 ge 48 le 64\n"),
     ))
     def test_prefix_list_line(self, worker, entry, expect):
         """Test case for 'prefix_list_line' method."""
@@ -250,7 +250,7 @@ class TestPrefixListWorker(object):
         pytest.param("fail", False,
                      marks=pytest.mark.xfail(raises=RuntimeError)),
         pytest.param("error", False,
-                     marks=pytest.mark.xfail(raises=RuntimeError))
+                     marks=pytest.mark.xfail(raises=RuntimeError)),
     ))
     def test_eapi_request(self, worker, cmd, allow_empty):
         """Test case for 'eapi_request' method."""
@@ -269,7 +269,7 @@ class TestPrefixListWorker(object):
         pytest.param(urllib.error.HTTPError(url="/testing", code=500,
                                             msg="Testing", hdrs=None, fp=None),
                      marks=pytest.mark.xfail(raises=urllib.error.HTTPError),
-                     id="HTTPError")
+                     id="HTTPError"),
     ))
     def test_rptk_request(self, mocker, worker, side_effect):
         """Test case for 'rptk_request' method."""
@@ -284,7 +284,7 @@ class TestPrefixListWorker(object):
         pytest.param("foo",
                      marks=pytest.mark.xfail(raises=ValueError, strict=True)),
         pytest.param(io.StringIO("foo"),
-                     marks=pytest.mark.xfail(raises=ValueError, strict=True))
+                     marks=pytest.mark.xfail(raises=ValueError, strict=True)),
     ))
     def test_json_load(self, worker, obj):
         """Test case for 'json_load' method."""

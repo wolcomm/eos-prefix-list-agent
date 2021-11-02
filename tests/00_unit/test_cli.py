@@ -13,10 +13,10 @@
 
 import sys
 
-import pytest
-
 from prefix_list_agent.agent import PrefixListAgent
 from prefix_list_agent.cli import start
+
+import pytest
 
 
 class TestCli(object):

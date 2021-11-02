@@ -15,10 +15,10 @@ import datetime
 import signal
 import time
 
-import pytest
-
 from prefix_list_agent.agent import PrefixListAgent
-from prefix_list_agent.exceptions import handle_sigterm, TermException
+from prefix_list_agent.exceptions import TermException, handle_sigterm
+
+import pytest
 
 
 class TestPrefixListAgent(object):
@@ -29,7 +29,7 @@ class TestPrefixListAgent(object):
         # Should return True on the first call
         assert PrefixListAgent.set_sysdb_mp(sdk.name())
         # Should return False on subsequent calls
-        for i in range(3):
+        for _ in range(3):
             assert not PrefixListAgent.set_sysdb_mp(sdk.name())
 
     def test_init(self, agent):
@@ -45,7 +45,7 @@ class TestPrefixListAgent(object):
 
     def test_property_source_dir(self, agent):
         """Test 'source_dir' getter and setter."""
-        assert agent.source_dir == "/tmp/prefix-lists"
+        assert agent.source_dir == "/tmp/prefix-lists"  # noqa: S108
         test_value = "/foo/bar"
         agent.source_dir = test_value
         assert agent.source_dir == test_value
@@ -108,7 +108,7 @@ class TestPrefixListAgent(object):
         ("source_dir", "/foo/bar"),
         ("refresh_interval", 60),
         ("update_delay", 1),
-        ("bad_option", None)
+        ("bad_option", None),
     ))
     def test_set(self, agent, mocker, key, value):
         """Test case for 'set' method."""
@@ -124,7 +124,7 @@ class TestPrefixListAgent(object):
         ("rptk_endpoint", "endpoint", "https://foo.bar"),
         ("source_dir", "path", "/quux/baz"),
         ("update_delay", "update_delay", None),
-        ("update_delay", "update_delay", 1)
+        ("update_delay", "update_delay", 1),
     ))
     def test_init_worker(self, agent, agent_key, worker_key, value):
         """Test case for `init_worker` method."""

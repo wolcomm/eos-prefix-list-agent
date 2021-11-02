@@ -22,7 +22,7 @@ from rptk_stub import RptkStubProcess
 def node():
     """Provide a pyeapi node connected to the local unix socket."""
     err = None
-    for retry in range(60):
+    for _ in range(60):
         try:
             import pyeapi
             conn = pyeapi.connect(transport="socket")
@@ -48,7 +48,7 @@ def configure_daemon(node):
         "option rptk_endpoint value http://127.0.0.1:8000/",
         "option refresh_interval value 10",
         "option update_delay value 1",
-        "no shutdown"
+        "no shutdown",
     ]
     node.config(agent_config)
     time.sleep(3)

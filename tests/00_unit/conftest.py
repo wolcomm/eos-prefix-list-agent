@@ -12,15 +12,14 @@
 """Fixtures for prefix_list_agent test cases."""
 
 import json
+import multiprocessing.connection
 import unittest.mock
-
-import pytest
 
 import eossdk
 
-from multiprocessing.connection import Connection
-
 from prefix_list_agent.agent import PrefixListAgent
+
+import pytest
 
 
 class DummySdk(object):
@@ -79,7 +78,7 @@ class DummySdk(object):
                     "AS-FOO": {"ipPrefixListSource": "file:/tmp/prefix-lists/strict/as-foo"},  # noqa: E501
                     "AS-BAR": {},
                     "AS-BAZ": {"ipPrefixListSource": "file:/baz/as-baz"},
-                    "AS-QUX": {"ipPrefixListSource": "file:/tmp/prefix-lists/qux/as-qux"}  # noqa: E501
+                    "AS-QUX": {"ipPrefixListSource": "file:/tmp/prefix-lists/qux/as-qux"},  # noqa: E501
                 }})
             else:
                 result = json.dumps({"{}_resp".format(cmd): {"foo": "bar"}})
@@ -116,5 +115,5 @@ def worker(agent):
 @pytest.fixture()
 def connection(mocker):
     """Provide a mocked Connection instance."""
-    conn = unittest.mock.create_autospec(Connection)
+    conn = unittest.mock.create_autospec(multiprocessing.connection.Connection)  # noqa: E501
     return conn

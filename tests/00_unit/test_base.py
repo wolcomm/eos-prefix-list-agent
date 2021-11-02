@@ -11,9 +11,9 @@
 # the License.
 """Tests for prefix_list_agent.agent module."""
 
-import pytest
-
 from prefix_list_agent.base import PrefixListBase
+
+import pytest
 
 
 class TestPrefixListAgent(object):

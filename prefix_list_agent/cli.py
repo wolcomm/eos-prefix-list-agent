@@ -27,7 +27,7 @@ def start(sdk: eossdk.Sdk) -> int:
             # that a restart is desired
             return 64
         # create an instance of the agent
-        agent = PrefixListAgent(sdk)  # noqa: W0612
+        _ = PrefixListAgent(sdk)
         # enter the sdk event-loop
         sdk.main_loop(sys.argv)
     except KeyboardInterrupt:

@@ -11,7 +11,6 @@
 # the License.
 """prefix_list_agent agent implementation."""
 
-import collections.abc
 import datetime
 import filecmp
 import multiprocessing.connection
@@ -28,9 +27,10 @@ from .base import PrefixListBase
 from .worker import PrefixListWorker
 
 
-# mypy: allow-subclassing-any
-class PrefixListAgent(PrefixListBase, eossdk.AgentHandler,
-                      eossdk.TimeoutHandler, eossdk.FdHandler):
+class PrefixListAgent(PrefixListBase,
+                      eossdk.AgentHandler,  # type: ignore[misc]
+                      eossdk.TimeoutHandler,  # type: ignore[misc]
+                      eossdk.FdHandler):  # type: ignore[misc]
     """An EOS SDK based agent that creates prefix-list policy objects."""
 
     sysdb_mounts = ("agent",)
@@ -78,10 +78,10 @@ class PrefixListAgent(PrefixListBase, eossdk.AgentHandler,
         eossdk.FdHandler.__init__(self)
         # set worker process to None
         self._worker: typing.Optional[PrefixListWorker] = None
-        self.watching: typing.Set[multiprocessing.connection.Connection] = set()  #noqa: E501
+        self.watching: typing.Set[multiprocessing.connection.Connection] = set()  # noqa: E501
         # set default confg options
         self._rptk_endpoint: typing.Optional[str] = None
-        self._source_dir = "/tmp/prefix-lists"
+        self._source_dir = "/tmp/prefix-lists"  # noqa: S108
         self._refresh_interval = 3600
         self._update_delay: typing.Optional[int] = None
         # create state containers
@@ -228,7 +228,7 @@ class PrefixListAgent(PrefixListBase, eossdk.AgentHandler,
     def init_worker(self) -> None:
         """Create a worker instance."""
         self.info("Initialising worker")
-        assert self.rptk_endpoint is not None
+        assert self.rptk_endpoint is not None  # noqa: S101
         self._worker = PrefixListWorker(endpoint=self.rptk_endpoint,
                                         path=self.source_dir,
                                         eapi=self.eapi_mgr,
@@ -296,7 +296,7 @@ class PrefixListAgent(PrefixListBase, eossdk.AgentHandler,
         """Handle worker exception."""
         self.status = "error"
         if err is None:
-            assert process is not None
+            assert process is not None  # noqa: S101
             err = process.error
         self.err(err)
         self.result = "failed"
@@ -313,7 +313,8 @@ class PrefixListAgent(PrefixListBase, eossdk.AgentHandler,
             self.info(f"{name}: {value}")
             self.agent_mgr.status_set(name, str(value))
 
-    def cleanup(self, process: typing.Optional[PrefixListWorker]) -> None:
+    def cleanup(self,  # noqa: R701
+                process: typing.Optional[PrefixListWorker]) -> None:
         """Kill the process if it is still running."""
         self.status = "cleanup"
         process_name = process.__class__.__name__
@@ -323,11 +324,9 @@ class PrefixListAgent(PrefixListBase, eossdk.AgentHandler,
             for conn in [c for c in
                          [getattr(process, k) for k in dir(process)
                           if not k.startswith("_")]
-                         if isinstance(c, collections.abc.Hashable)
+                         if isinstance(c, multiprocessing.connection.Connection)  # noqa: E501
                          and c in self.watching]:
                 try:
-                    assert isinstance(conn,
-                                      multiprocessing.connection.Connection)
                     self.unwatch(conn, close=True)
                 except Exception as e:
                     self.err(e)
@@ -340,11 +339,10 @@ class PrefixListAgent(PrefixListBase, eossdk.AgentHandler,
                     self.info(f"Waiting {timeout} seconds for {process_name} "
                               f"(pid: {process.pid}) to join")
                     process.join(timeout)
-            if process.is_alive():
+            if process.is_alive() and process.pid is not None:
                 self.notice(f"Timeout waiting for {process_name}. "
                             "Sending SIGKILL")
-                if process.pid is not None:
-                    os.kill(process.pid, signal.SIGKILL)
+                os.kill(process.pid, signal.SIGKILL)
         self.info("Cleanup complete")
 
     def sleep(self) -> None:

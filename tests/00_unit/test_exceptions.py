@@ -13,9 +13,9 @@
 
 import signal
 
-import pytest
-
 from prefix_list_agent.exceptions import TermException, handle_sigterm
+
+import pytest
 
 
 class TestExceptions(object):

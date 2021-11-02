@@ -27,9 +27,9 @@ import urllib.request
 import eossdk
 
 from .base import PrefixListBase
-from .exceptions import handle_sigterm, TermException
+from .exceptions import TermException, handle_sigterm
 from .types import (Configured, Data, EapiResponse, Objects, Policies,
-                    RptkPrefixes, RptkPrefixEntries, RptkPrefixEntry,
+                    RptkPrefixEntries, RptkPrefixEntry, RptkPrefixes,
                     RptkResult, Stats)
 
 PATH_RE = r"^file:{}/(?P<policy>\w+)/(?P<file>[-.:\w]+)$"
@@ -299,7 +299,8 @@ class PrefixListWorker(multiprocessing.Process, PrefixListBase):
                              url_path.lstrip("/"))
         self.debug(f"Querying RPTK endpoint at {url}")
         try:
-            resp = urllib.request.urlopen(url)
+            # TODO: construct url properly
+            resp = urllib.request.urlopen(url)  # noqa: S310
         except urllib.error.HTTPError as e:
             self.err(f"Request failed: {e.code} {e.reason}")
             raise e

@@ -24,7 +24,7 @@ package = {"__name__": find_packages()[0]}
 here = os.path.abspath(os.path.dirname(__file__))
 
 with open(os.path.join(here, package["__name__"], "__meta__.py")) as f:
-    exec(f.read(), package)
+    exec(f.read(), package)  # noqa: S102
 
 with open(os.path.join(here, "packaging", "requirements.txt")) as f:
     package["__requirements__"] = f.readlines()
@@ -56,5 +56,5 @@ setup(
     download_url="{}/{}".format(package["__url__"], package["__version__"]),
     install_requires=package["__requirements__"],
     entry_points=package["__entry_points__"],
-    scripts=package["__scripts__"]
+    scripts=package["__scripts__"],
 )

@@ -26,11 +26,11 @@ __classifiers__ = [
     "Operating System :: POSIX :: Other",
     "Programming Language :: Python :: 3",
     "Topic :: Internet",
-    "Topic :: System :: Networking"
+    "Topic :: System :: Networking",
 ]
 __entry_points__ = None
 __scripts__ = [
-    "bin/PrefixListAgent"
+    "bin/PrefixListAgent",
 ]
 
 

@@ -20,7 +20,7 @@ import pytest
 NAME = "PrefixListAgent"
 
 
-@pytest.mark.usefixtures("rptk_stub", "configure_daemon")
+@pytest.mark.usefixtures("rptk_stub", "configure_daemon")  # noqa: R701
 class TestPrefixListAgentDaemon(object):
     """Integration test cases for PrefixListAgent."""
 
@@ -33,25 +33,25 @@ class TestPrefixListAgentDaemon(object):
         assert status[NAME]["enabled"]
         assert status[NAME]["running"]
 
-    def test_prefix_lists(self, node):
+    def test_prefix_lists(self, node):  # noqa: R701
         """Test prefix-list creation."""
         objects = {
             "AS-FOO": {
                 "ipv4": [
-                    {"prefix": "192.0.2.0/24", "exact": True}
+                    {"prefix": "192.0.2.0/24", "exact": True},
                 ],
                 "ipv6": [
                     {"prefix": "2001:db8::/32", "exact": False,
-                     "greater-equal": 40, "less-equal": 48}
-                ]
+                     "greater-equal": 40, "less-equal": 48},
+                ],
             },
             "AS-BAR": {
                 "ipv4": [
                     {"prefix": "198.51.100.0/24", "exact": True},
-                    {"prefix": "203.0.113.0/24", "exact": True}
+                    {"prefix": "203.0.113.0/24", "exact": True},
                 ],
-                "ipv6": []
-            }
+                "ipv6": [],
+            },
         }
         time.sleep(15)
         responses = node.enable([f"show {config_af} prefix-list"
@@ -66,7 +66,8 @@ class TestPrefixListAgentDaemon(object):
                                    encoding="text")
                 output = resp[0]["result"]["output"]
                 entries = [m.groupdict() for m in
-                           [entry_regexp.match(l) for l in output.splitlines()] #noqa E741
+                           [entry_regexp.match(line)
+                            for line in output.splitlines()]
                            if m is not None]
                 assert len(entries) == len(data[afi])
                 for item in data[afi]:

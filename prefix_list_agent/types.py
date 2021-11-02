@@ -19,8 +19,8 @@ Configured = typing.Dict[
     str,
     typing.DefaultDict[
         str,
-        typing.Dict[str, str]
-    ]
+        typing.Dict[str, str],
+    ],
 ]
 
 Objects = typing.Set[str]
@@ -29,7 +29,7 @@ Stats = typing.Dict[str, int]
 
 RptkPrefixEntry = typing.Dict[  # prefix
     str,
-    typing.Union[str, bool, int]
+    typing.Union[str, bool, int],
 ]
 
 RptkPrefixEntries = typing.List[RptkPrefixEntry]
@@ -38,15 +38,15 @@ RptkPrefixes = typing.Dict[
     str,  # object
     typing.Dict[
         str,  # afi
-        RptkPrefixEntries
-    ]
+        RptkPrefixEntries,
+    ],
 ]
 
 RptkResult = typing.Union[Policies, RptkPrefixes]
 
 Data = typing.Dict[
     str,  # policy
-    RptkPrefixes
+    RptkPrefixes,
 ]
 
 EapiResponse = typing.Any
