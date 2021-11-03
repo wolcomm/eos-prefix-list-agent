@@ -25,10 +25,11 @@ update the prefix-lists without calling the EOS config parser.
 ### From RPM (recommended)
 
 Install the agent as an EOS extension:
-```
-ar#copy https://github.com/wolcomm/eos-prefix-list-agent/releases/download/0.1.0a8/prefix_list_agent-0.1.0a8-1.noarch.rpm extension:
-ar#extension prefix_list_agent-0.1.0a8-1.noarch.rpm
-ar#sh extensions
+
+``` eos
+eos# copy https://github.com/wolcomm/eos-prefix-list-agent/releases/download/0.1.0a8/prefix_list_agent-0.1.0a8-1.noarch.rpm extension:
+eos# extension prefix_list_agent-0.1.0a8-1.noarch.rpm
+eos# sh extensions
 Name                                      Version/Release    Status    Extension
 ----------------------------------------- ------------------ --------- ---------
 prefix_list_agent-0.1.0a8-1.noarch.rpm    0.1.0a8/1          A, I      1
@@ -38,10 +39,11 @@ A: available | NA: not available | I: installed | NI: not installed | F: forced
 ```
 
 Persist the extension to be installed on boot:
-```
-ar#copy installed-extensions boot-extensions
+
+``` eos
+eos# copy installed-extensions boot-extensions
 Copy completed successfully.
-ar#sh boot-extensions
+eos# sh boot-extensions
 prefix_list_agent-0.1.0a8-1.noarch.rpm
 ```
 
@@ -52,12 +54,14 @@ Without additional configuration, the installation will not persist across
 reloads.
 
 Drop to the shell:
-```
-ar#bash
+
+``` eos
+eos# bash
 ```
 
 Install from PyPI:
-```bash
+
+``` bash
 $ sudo pip install prefix-list-agent
 ```
 
@@ -66,8 +70,9 @@ $ sudo pip install prefix-list-agent
 ### Daemon
 
 Configure the agent as an EOS "daemon":
-```
-ar#conf t
+
+``` eos
+eos# conf t
 ar(config)#daemon PrefixListAgent
 ar(config-daemon-PrefixListAgent)#exec /usr/bin/PrefixListAgent
 ```
@@ -75,18 +80,21 @@ ar(config-daemon-PrefixListAgent)#exec /usr/bin/PrefixListAgent
 ### Tracing
 
 Enable tracing using the EOS agent tracing infrastructure, e.g.:
-```
+
+``` eos
 ar(config)#trace PrefixListAgent-PrefixListAgent setting PrefixList*/0-6
 ```
 
 ### Set Configuration Options
 
 Set configuration options using the command:
-```
+
+``` eos
 ar(config-daemon-PrefixListAgent)#option <option-name> value <option-value>
 ```
 
 Available configuration options are:
+
 * `rptk_endpoint` (default: `None`, *required*):
 
   The RPTK web service endpoint to connect to when retrieving prefix-list data.
@@ -99,34 +107,48 @@ Available configuration options are:
 
   The interval between prefix-list updates.
 
+* `update_delay` (default: `None`):
+
+  Delay (in seconds) between refreshing prefix-list contents from file.
+  Used to work around issues with SysDB keeping up with large prefix-list
+  updates.
+  If not set, all prefix-lists are refreshed simultaneously.
+
 ### Start the Agent
 
-```
-ar(config-daemon-PrefixListAgent)#no shutdown
+``` eos
+eos(config-daemon-PrefixListAgent)# no shutdown
 ```
 
 ## Prefix-List Configuration
 
 The PrefixListAgent will check the running configuration for source-based
 prefix-lists matching the form:
-```
+
+``` eos
 ip[v6] prefix-list ${irr_object} source file:${source_dir}/${policy}/${file_name}
 ```
+
 Where:
 
 * `${irr_object}`: The IRR object (`aut-num` or `as-set`) to build the
   prefix-list from.
+
 * `${source_dir}`: The configured `source_dir`, as above.
+
 * `${policy}`: The resolution policy to use when resolving the IRR object to a
   prefix-list. Must be a valid policy available on the RPTK web service. You can
   check the available policies with:
-```bash
+
+``` bash
 $ curl -q ${rptk_endpoint}/policies | jq
 ```
+
 * `${file_name}`: The file to write the resulting prefix-list data to. This
   name should be unique per resolution policy.
 
 After the next update, you should be able to see the entries with:
-```
-ar#show ip[v6] prefix-list ${irr_object} detail
+
+``` eos
+eos# show ip[v6] prefix-list ${irr_object} detail
 ```
