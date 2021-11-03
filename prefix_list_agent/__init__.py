@@ -13,8 +13,6 @@
 
 import logging
 
-import prefix_list_agent.__meta__  # noqa
-
 from .agent import PrefixListAgent
 from .cli import start
 
