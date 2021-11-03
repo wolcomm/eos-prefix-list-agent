@@ -9,10 +9,6 @@
 
 ## install docs generation requirements
 #-r requirements-docs.txt
-#
-## install packaging requirements
-#-r requirements-build.txt
-#-r requirements-pkg.txt
-#
-## install package in development mode
-#-e .
+
+# install packaging requirements
+-r requirements-build.txt

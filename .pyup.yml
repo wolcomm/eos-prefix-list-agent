@@ -1,0 +1,9 @@
+update: all
+pin: True
+assignees:
+  - benmaddison
+label_prs: enhancement
+requirements:
+  - setup.cfg:
+      update: insecure
+      pin: False
