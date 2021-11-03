@@ -1,6 +1,6 @@
 <!--description: An EOS agent to dynamically update IRR based prefix-lists -->
 [![PyPI](https://img.shields.io/pypi/v/prefix-list-agent.svg)](https://pypi.python.org/pypi/prefix-list-agent)
-[![Build Status](https://travis-ci.com/wolcomm/eos-prefix-list-agent.svg?branch=master)](https://travis-ci.com/wolcomm/eos-prefix-list-agent)
+[![CI/CD](https://github.com/wolcomm/eos-prefix-list-agent/actions/workflows/cicd.yml/badge.svg?event=push)](https://github.com/wolcomm/eos-prefix-list-agent/actions/workflows/cicd.yml)
 [![codecov](https://codecov.io/gh/wolcomm/eos-prefix-list-agent/branch/master/graph/badge.svg)](https://codecov.io/gh/wolcomm/eos-prefix-list-agent)
 
 # Prefix-list Agent for Arista EOS
