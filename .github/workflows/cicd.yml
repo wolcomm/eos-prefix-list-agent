@@ -59,10 +59,6 @@ jobs:
       fail-fast: false
       matrix:
         ceos:
-          - "4.22.4M"
-          - "4.23.10M"
-          - "4.24.4M"
-          - "4.25.5M"
           - "4.26.3M"
           - "4.27.0F"
     env:
@@ -98,10 +94,6 @@ jobs:
     strategy:
       matrix:
         ceos:
-          - "4.22.4M"
-          - "4.23.10M"
-          - "4.24.4M"
-          - "4.25.5M"
           - "4.26.3M"
           - "4.27.0F"
     steps:
@@ -141,32 +133,27 @@ jobs:
   #       with:
   #         name: docs
   #         path: build/docs/html/
-  # build-dist:
-  #   needs: [safety]
-  #   runs-on: ubuntu-latest
-  #   strategy:
-  #     matrix:
-  #       distribution:
-  #         - sdist
-  #         - wheel
-  #   steps:
-  #     - name: checkout
-  #       uses: actions/checkout@v2
-  #     - name: setup python ${{ env.DEFAULT_PYTHON }}
-  #       uses: actions/setup-python@v2
-  #       with:
-  #         python-version: ${{ env.DEFAULT_PYTHON }}
-  #     - name: install build tools
-  #       run: python -m pip install -r packaging/requirements-build.txt
-  #     - name: build ${{ matrix.distribution }}
-  #       run: python -m build --$DIST
-  #       env:
-  #         DIST: ${{ matrix.distribution }}
-  #     - name: upload ${{ matrix.distribution }} artifact
-  #       uses: actions/upload-artifact@v2
-  #       with:
-  #         name: ${{ matrix.distribution }}
-  #         path: dist/
+  build-pkg:
+    needs: [safety]
+    runs-on: ubuntu-latest
+    env:
+      TOX_JOB: build
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: setup python ${{ env.DEFAULT_PYTHON }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ env.DEFAULT_PYTHON }}
+      - name: install ${{ env.TOX_JOB }} job runner
+        run: python -m pip install -r packaging/requirements-tox.txt
+      - name: run ${{ env.TOX_JOB }} job
+        run: tox
+      - name: upload build artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: packages
+          path: bdist/**/*.(rpm|swix)
   # publish-docs:
   #   if: ${{ github.event_name == 'push' }}
   #   needs:
