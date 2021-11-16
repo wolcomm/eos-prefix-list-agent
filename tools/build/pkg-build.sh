@@ -20,7 +20,8 @@ OUT_DIR="dist"
 mkdir -p "$OUT_DIR"
 SWIX="${OUT_DIR}/eos-prefix-list-agent-${VERSION}.swix"
 swix-create -i manifest.yaml \
-    $SWIX \$BUILD_ROOT/rpmbuild/RPMS/**/*.rpm
+    $SWIX \
+    $BUILD_ROOT/rpmbuild/RPMS/**/*.rpm
 cp ${BUILD_ROOT}/rpmbuild/SRPMS/*.rpm \
     ${BUILD_ROOT}/rpmbuild/RPMS/**/*.rpm \
     "${OUT_DIR}/"
