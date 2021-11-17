@@ -159,22 +159,27 @@ class TestPrefixListAgent(object):
         agent.watch_readable.assert_called_once_with(connection.fileno(), True)
         assert connection in agent.watching
 
+    @pytest.mark.parametrize("watching", (True, False))
     @pytest.mark.parametrize("close", (True, False))
-    def test_unwatch(self, agent, mocker, connection, close):
+    def test_unwatch(self, agent, mocker, connection, watching, close):
         """Test case for 'unwatch' method."""
         mocker.patch.object(agent, "watch_readable")
-        agent.watching.add(connection)
+        mocker.patch.object(agent, "warning")
+        if watching:
+            agent.watching.add(connection)
         agent.unwatch(connection, close=close)
         agent.watch_readable.assert_called_once_with(connection.fileno(),
                                                      False)
+        if not watching:
+            agent.warning.assert_called_once()
         if close:
             connection.close.assert_called_once_with()
 
-    def test_success(self, agent, mocker):
+    @pytest.mark.parametrize("stats", ({"foo": "bar"}, None))
+    def test_success(self, agent, mocker, stats):
         """Test case for 'success' method."""
         for method in ("report", "cleanup", "sleep"):
             mocker.patch.object(agent, method, autospec=True)
-        stats = {"foo": "bar"}
         mock_worker = mocker.patch("prefix_list_agent.agent.PrefixListWorker",
                                    autospec=True)
         mock_worker.return_value.data = stats
@@ -183,7 +188,8 @@ class TestPrefixListAgent(object):
                                     eapi=agent.eapi_mgr,
                                     update_delay=agent.update_delay)
         agent.success()
-        agent.report.assert_called_once_with(**stats)
+        if stats is not None:
+            agent.report.assert_called_once_with(**stats)
         agent.cleanup.assert_called_once_with(process=agent.worker)
         agent.sleep.assert_called_once_with()
 

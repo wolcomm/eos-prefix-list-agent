@@ -236,6 +236,10 @@ class TestPrefixListWorker(object):
         ({"prefix": "2001:db8::/32", "exact": False,
           "greater-equal": 48, "less-equal": 64},
          "seq 1 permit 2001:db8::/32 ge 48 le 64\n"),
+        ({"prefix": "192.168.0.0/16", "exact": False, "greater-equal": 20},
+         "seq 1 permit 192.168.0.0/16 ge 20\n"),
+        ({"prefix": "2001:db8:f00::/48", "exact": False, "less-equal": 64},
+         "seq 1 permit 2001:db8:f00::/48 le 64\n"),
     ))
     def test_prefix_list_line(self, worker, entry, expect):
         """Test case for 'prefix_list_line' method."""

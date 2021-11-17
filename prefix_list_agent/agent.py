@@ -240,7 +240,9 @@ class PrefixListAgent(PrefixListBase,
         self.watch_readable(fileno, False)
         if conn in self.watching:
             self.watching.remove(conn)
-        self.info(f"Stopped watching {conn}")
+            self.info(f"Stopped watching {conn}")
+        else:
+            self.warning(f"Connection {conn} not watched")
         if close:
             self.info(f"Closing connection {conn}")
             conn.close()
