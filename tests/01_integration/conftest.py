@@ -18,6 +18,23 @@ import pytest
 from rptk_stub import RptkStubProcess
 
 
+def pytest_addoption(parser):
+    parser.addoption("--extension-pkg", action="store")
+    parser.addoption("--exec-path", action="store")
+
+
+@pytest.fixture(scope="session")
+def package(request):
+    """Get extension package name from CLI args."""
+    return request.config.getoption("extension_pkg", default=None)
+
+
+@pytest.fixture(scope="session")
+def exec_path(request):
+    """Get exec path from CLI args."""
+    return request.config.getoption("exec_path", default="/root/bin")
+
+
 @pytest.fixture(scope="module")
 def node():
     """Provide a pyeapi node connected to the local unix socket."""
@@ -39,12 +56,25 @@ def node():
 
 
 @pytest.fixture(scope="module")
-def configure_daemon(node):
+def install_extension(node, package):
+    """Install EOS SDK based extension from RPM/SWIX."""
+    if package is not None:
+        commands = [
+            f"copy flash:{package} extension:",
+            f"extension {package}",
+        ]
+        node.run_commands(commands)
+        time.sleep(3)
+    yield
+
+
+@pytest.fixture(scope="module")
+def configure_daemon(node, install_extension, exec_path):
     """Configure the agent as an EOS ProcMgr daemon."""
     agent_config = [
         "trace PrefixListAgent-PrefixListAgent setting PrefixList*/*",
         "daemon PrefixListAgent",
-        "exec /root/bin/PrefixListAgent",
+        f"exec {exec_path}/PrefixListAgent",
         "option rptk_endpoint value http://127.0.0.1:8000/",
         "option refresh_interval value 10",
         "option update_delay value 1",
