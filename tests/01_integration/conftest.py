@@ -19,6 +19,7 @@ from rptk_stub import RptkStubProcess
 
 
 def pytest_addoption(parser):
+    """Add custom pytest CLI options."""
     parser.addoption("--extension-pkg", action="store")
     parser.addoption("--exec-path", action="store")
 
