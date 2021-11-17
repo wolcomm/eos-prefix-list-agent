@@ -24,14 +24,6 @@ import pytest
 class TestPrefixListAgent(object):
     """Test cases for PrefixListAgent object."""
 
-    def test_set_sysdb_mp(self, sdk):
-        """Test case for 'set_sysdb_mp' classmethod."""
-        # Should return True on the first call
-        assert PrefixListAgent.set_sysdb_mp(sdk.name())
-        # Should return False on subsequent calls
-        for _ in range(3):
-            assert not PrefixListAgent.set_sysdb_mp(sdk.name())
-
     def test_init(self, agent):
         """Test case for PrefixListAgent initialisation."""
         assert isinstance(agent, PrefixListAgent)

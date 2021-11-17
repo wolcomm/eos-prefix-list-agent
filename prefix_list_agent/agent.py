@@ -12,13 +12,9 @@
 """prefix_list_agent agent implementation."""
 
 import datetime
-import filecmp
 import multiprocessing.connection
 import os
-import platform
-import shutil
 import signal
-import tempfile
 import typing
 
 import eossdk
@@ -33,36 +29,8 @@ class PrefixListAgent(PrefixListBase,
                       eossdk.FdHandler):  # type: ignore[misc]
     """An EOS SDK based agent that creates prefix-list policy objects."""
 
-    sysdb_mounts = ("agent",)
     agent_options = ("rptk_endpoint", "source_dir", "refresh_interval",
                      "update_delay")
-
-    @classmethod
-    def set_sysdb_mp(cls, name: str) -> bool:
-        """Create the SysdbMountProfiles file for the agent."""
-        # set the path
-        arch = platform.architecture()[0]
-        if arch == "32bit":     # pragma: no cover
-            lib_dir = "/usr/lib"
-        elif arch == "64bit":
-            lib_dir = "/usr/lib64"
-        else:  # pragma: no cover
-            raise RuntimeError(f"Unknown architecture '{arch}'")
-        profile_path = os.path.join(lib_dir, "SysdbMountProfiles", name)
-        # get a tempfile for writing the profile to
-        with tempfile.NamedTemporaryFile() as tmp:
-            # write the profile file
-            tmp.write(f"agentName:{name}-%sliceId\n\n".encode())
-            for profile in cls.sysdb_mounts:
-                tmp.write(f"Include: EosSdk_{profile}.include\n".encode())
-            tmp.flush()
-            # check whether an existing file matches and bail out
-            if os.path.isfile(profile_path):
-                if filecmp.cmp(profile_path, tmp.name, shallow=False):
-                    return False
-            # copy the tempfile into place
-            shutil.copy(tmp.name, profile_path)
-        return True
 
     def __init__(self, sdk: eossdk.Sdk):
         """Initialise the agent instance."""

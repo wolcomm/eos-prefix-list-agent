@@ -33,18 +33,12 @@ class TestCli(object):
     @pytest.mark.parametrize(("arg", "ret"),
                              ((None, 0), (KeyboardInterrupt, 130),
                               (RuntimeError, RuntimeError)))
-    @pytest.mark.parametrize("sysdb_mp_written", (True, False))
-    def test_start(self, sdk, mocker, arg, ret, sysdb_mp_written):
+    def test_start(self, sdk, mocker, arg, ret):
         """Test case for cli entrypoint."""
         self.module_patch(mocker, "eossdk", PrefixListAgent)
-        mocker.patch.object(PrefixListAgent, "set_sysdb_mp",
-                            return_value=sysdb_mp_written)
         sys.argv = arg
-        if sysdb_mp_written:
-            assert start(sdk) == 64
+        if isinstance(ret, int):
+            assert start(sdk) == ret
         else:
-            if isinstance(ret, int):
-                assert start(sdk) == ret
-            else:
-                with pytest.raises(ret):
-                    start(sdk)
+            with pytest.raises(ret):
+                start(sdk)

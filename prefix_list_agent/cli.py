@@ -21,11 +21,6 @@ from . import PrefixListAgent
 def start(sdk: eossdk.Sdk) -> int:
     """Start the agent."""
     try:
-        # create a Sysdb mount profile, restarting if necessary
-        if PrefixListAgent.set_sysdb_mp(sdk.name()):
-            # return a user defined status to indicate
-            # that a restart is desired
-            return 64
         # create an instance of the agent
         _ = PrefixListAgent(sdk)
         # enter the sdk event-loop
