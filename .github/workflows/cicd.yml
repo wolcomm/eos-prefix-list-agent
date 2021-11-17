@@ -151,11 +151,16 @@ jobs:
         run: python -m pip install -r packaging/requirements-tox.txt
       - name: run ${{ env.TOX_JOB }} job
         run: tox
-      - name: upload build artifacts
+      - name: upload rpm artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: packages
-          path: bdist/**/*.(rpm|swix)
+          name: rpm
+          path: bdist/**/*.rpm
+      - name: upload swix artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: swix
+          path: bdist/**/*.swix
   # publish-docs:
   #   if: ${{ github.event_name == 'push' }}
   #   needs:
