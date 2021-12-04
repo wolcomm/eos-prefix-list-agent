@@ -4,7 +4,32 @@ on:
   - pull_request
 env:
   DEFAULT_PYTHON: 3.7
+  EARTHLY_VERSION: 0.6.2
 jobs:
+  earthly:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: install earthly
+        run: |
+          sudo wget "https://github.com/earthly/earthly/releases/download/v${EARTHLY_VERSION}/earthly-linux-amd64" \
+            -O /usr/local/bin/earthly && \
+          sudo chmod +x /usr/local/bin/earthly && \
+      - name: bootstrap earthly
+        run: |
+          /usr/local/bin/earthly bootstrap
+      - name: login to azure acr
+        run: |
+          echo -n "${AZURE_ACR_TOKEN}" | docker login \
+              --username "${AZURE_ACR_TOKEN_NAME}" \
+              --password-stdin "${AZURE_ACR_URI}"
+        env:
+          AZURE_ACR_URI: "workonline.azurecr.io"
+          AZURE_ACR_TOKEN_NAME: "gh-actions-eos-prefix-list-agent"
+          AZURE_ACR_TOKEN: ${{ secrets.AZURE_ACR_TOKEN }}
+      - name: build
+        run: earthly -P +all
   safety:
     runs-on: ubuntu-latest
     env:
