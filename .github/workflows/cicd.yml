@@ -15,7 +15,7 @@ jobs:
         run: |
           sudo wget "https://github.com/earthly/earthly/releases/download/v${EARTHLY_VERSION}/earthly-linux-amd64" \
             -O /usr/local/bin/earthly && \
-          sudo chmod +x /usr/local/bin/earthly && \
+          sudo chmod +x /usr/local/bin/earthly
       - name: bootstrap earthly
         run: |
           /usr/local/bin/earthly bootstrap
