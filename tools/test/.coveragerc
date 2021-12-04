@@ -1,0 +1,11 @@
+[coverage:run]
+include =
+    */prefix_list_agent/*
+
+[coverage:report]
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    if __name__ == .__main__.:
+    if typing.TYPE_CHECKING:
+    raise NotImplementedError
