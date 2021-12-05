@@ -20,16 +20,22 @@ jobs:
         run: |
           /usr/local/bin/earthly bootstrap
       - name: login to azure acr
-        run: |
-          echo -n "${AZURE_ACR_TOKEN}" | docker login \
-              --username "${AZURE_ACR_TOKEN_NAME}" \
-              --password-stdin "${AZURE_ACR_URI}"
+        uses: docker/login-action@v1
+        with:
+          registry: ${{ env.AZURE_ACR_URI }}
+          username: ${{ env.AZURE_ACR_TOKEN_NAME }}
+          password: ${{ secrets.AZURE_ACR_TOKEN }}
         env:
           AZURE_ACR_URI: "workonline.azurecr.io"
           AZURE_ACR_TOKEN_NAME: "gh-actions-eos-prefix-list-agent"
-          AZURE_ACR_TOKEN: ${{ secrets.AZURE_ACR_TOKEN }}
+      - name: login to ghcr
+        uses: docker/login-login@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: build
-        run: earthly -P +all
+        run: earthly -P --ci --output --push +all
   safety:
     runs-on: ubuntu-latest
     env:
