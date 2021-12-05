@@ -3,36 +3,49 @@ VERSION 0.6
 FROM python:3.7-slim
 WORKDIR "/root/"
 
-RUN apt update -qq && \
-    apt upgrade -qqy && \
-    apt install -qy git
-RUN python -m pip install --upgrade pip
-
-RUN mkdir -p src
-WORKDIR "src/"
-COPY . .
-
 all:
+    BUILD +deps
     BUILD +safety
     BUILD +lint
     BUILD +typecheck
-    BUILD +test
+    BUILD +build
+    BUILD --build-arg CEOS_VERSION="4.26.3M" +test
+    BUILD --build-arg CEOS_VERSION="4.27.0F" +test
+
+deps:
+    RUN apt update -qq && \
+        apt upgrade -qqy && \
+        apt install -qqy git
+    RUN python -m pip install --upgrade pip
+
+    RUN mkdir -p src
+    WORKDIR "src/"
+    COPY --dir bin/ packaging/ prefix_list_agent/ tests/ .
+    COPY LICENSE pyproject.toml README.md setup.cfg tox.ini .
+
+    LABEL org.opencontainers.image.source=https://github.com/wolcomm/eos-prefix-list-agent
+    SAVE IMAGE --push ghcr.io/wolcomm/eos-prefix-list-agent/ci-deps:latest
 
 safety:
+    FROM +deps
     RUN python -m pip install --user -r packaging/requirements-safety.txt
     RUN python -m safety check -r packaging/requirements-dev.txt --full-report
 
 lint:
+    FROM +deps
     RUN python -m pip install --user -r packaging/requirements-lint.txt
     RUN python -m flake8 .
 
 typecheck:
+    FROM +deps
     RUN python -m pip install --user -r packaging/requirements-typecheck.txt
     RUN python -m mypy \
         --package prefix_list_agent \
         --config-file tox.ini
 
 sdist:
+    FROM +deps
+    COPY --dir .git/ .
     RUN python -m pip install --user build==0.7.0
     RUN python -m build --sdist --outdir dist/
 
@@ -84,8 +97,12 @@ build:
 
     SAVE ARTIFACT dist/*.swix AS LOCAL dist/swix/
 
+    LABEL org.opencontainers.image.source=https://github.com/wolcomm/eos-prefix-list-agent
+    SAVE IMAGE --push ghcr.io/wolcomm/eos-prefix-list-agent/ci-build:latest
+
 test-image:
-    FROM workonline.azurecr.io/ceos-lab:4.26.1F
+    ARG --required CEOS_VERSION
+    FROM workonline.azurecr.io/ceos-lab:$CEOS_VERSION
     WORKDIR "/root"
 
     RUN python3 -m ensurepip --default-pip
@@ -106,14 +123,20 @@ test-image:
         echo "extension ${SWIX}" >> install-extension-script
 
     SAVE ARTIFACT install-extension-script
-    SAVE IMAGE eos-prefix-list-agent-test:4.26.1F
+
+    LABEL org.opencontainers.image.source=https://github.com/wolcomm/eos-prefix-list-agent
+    SAVE IMAGE eos-prefix-list-agent-test:$CEOS_VERSION
+    SAVE IMAGE --push ghcr.io/wolcomm/eos-prefix-list-agent/ci-test:$CEOS_VERSION
 
 test:
     FROM earthly/dind:alpine
 
+    ARG --required CEOS_VERSION
+    BUILD --build-arg CEOS_VERSION=$CEOS_VERSION +test-image
+
     COPY +test-image/install-extension-script ./
 
-    WITH DOCKER --load test-image:latest=+test-image
+    WITH DOCKER --load test-image:latest=+test-image --build-arg CEOS_VERSION=$CEOS_VERSION
         RUN docker run --detach --privileged --rm --name test test-image:latest && \
             t=30; while [[ $t -gt 0 ]]; do \
                 echo -n "."; \
