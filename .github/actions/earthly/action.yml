@@ -1,0 +1,11 @@
+name: earthly
+description: "Run an earthly target"
+runs:
+  using: docker
+  image: docker://earthly/earthly:latest
+  args:
+    - "-P"
+    - "--ci"
+    - "--output"
+    - "--push"
+    - "+all"
