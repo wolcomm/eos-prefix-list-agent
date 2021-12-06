@@ -15,37 +15,48 @@ all:
 deps:
     RUN apt update -qq && \
         apt upgrade -qqy && \
-        apt install -qqy git
-    RUN python -m pip install --upgrade pip
+        apt install -qqy git g++ swig libssl-dev
+    RUN python -m pip install \
+        --progress-bar off \
+        --upgrade pip
+    RUN python -m pip install \
+        --progress-bar off \
+        --no-warn-script-location \
+        --user \
+        pipenv
 
     RUN mkdir -p src
     WORKDIR "src/"
-    COPY --dir bin/ packaging/ prefix_list_agent/ tests/ .
-    COPY LICENSE README.md pyproject.toml setup.cfg .
+    COPY --dir bin/ prefix_list_agent/ tests/ .
+    COPY LICENSE README.md Pipfile Pipfile.lock pyproject.toml setup.cfg .
+
+    RUN python -m pipenv sync --dev
+
+    #RUN python -m pip install \
+    #    --user \
+    #    --no-warn-script-location \
+    #    --progress-bar off \
+    #    -r "packaging/requirements-dev.txt"
 
     LABEL org.opencontainers.image.source=https://github.com/wolcomm/eos-prefix-list-agent
     SAVE IMAGE --push ghcr.io/wolcomm/eos-prefix-list-agent/ci-deps:latest
 
 safety:
     FROM +deps
-    RUN python -m pip install --user -r packaging/requirements-safety.txt
-    RUN python -m safety check -r packaging/requirements-dev.txt --full-report
+    RUN python -m pipenv run safety check --full-report
 
 lint:
     FROM +deps
-    RUN python -m pip install --user -r packaging/requirements-lint.txt
-    RUN python -m flake8 .
+    RUN python -m pipenv run flake8 .
 
 typecheck:
     FROM +deps
-    RUN python -m pip install --user -r packaging/requirements-typecheck.txt
-    RUN python -m mypy --package prefix_list_agent
+    RUN python -m pipenv run mypy --package prefix_list_agent
 
 sdist:
     FROM +deps
     COPY --dir .git/ .
-    RUN python -m pip install --user build==0.7.0
-    RUN python -m build --sdist --outdir dist/
+    RUN python -m pipenv run python -m build --sdist --outdir dist/
 
     SAVE ARTIFACT dist/*.tar.gz AS LOCAL dist/sdist/
 
@@ -75,14 +86,22 @@ build:
 
     COPY packaging/rpm/eos-prefix-list-agent.spec ./rpmbuild/SPECS/
     COPY packaging/swix/manifest.yaml .
-    COPY packaging/*-build.txt .
+    COPY Pipfile Pipfile.lock .
+    #COPY packaging/*-build.txt .
 
+    RUN python3 -m pip install \
+            --disable-pip-version-check \
+            --progress-bar off \
+            --no-warn-script-location \
+            --user \
+            pipenv
+    RUN python3 -m pipenv lock --dev-only -r > requirements.txt
     RUN python3 -m pip install \
             --disable-pip-version-check \
             --progress-bar off \
             --prefix /usr \
             --ignore-installed \
-            -r "requirements-build.txt"
+            -r "requirements.txt"
     
     COPY +sdist/*.tar.gz rpmbuild/SOURCES/
 
@@ -106,9 +125,14 @@ test-image:
     RUN python3 -m ensurepip --default-pip
     RUN python3 -m pip install --upgrade pip
 
-    COPY packaging/requirements-test.txt .
+    COPY Pipfile Pipfile.lock .
 
-    RUN python3 -m pip install --user -r "requirements-test.txt"
+    RUN python3 -m pip install \
+        --user \
+        --no-warn-script-location \
+        --progress-bar off \
+        pipenv
+    RUN python3 -m pipenv sync --system
 
     COPY pyproject.toml .
     COPY tests/data/startup-config /mnt/flash/
@@ -145,7 +169,7 @@ test:
             done; \
             [[ $started ]] && \
             docker exec --tty test Cli -p 15 -c "$(cat install-extension-script)" && \
-            docker exec --tty test .local/bin/pytest && \
+            docker exec --tty test python3 -m pytest && \
             docker cp test:/root/coverage.xml ./
     END
 

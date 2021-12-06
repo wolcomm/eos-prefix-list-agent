@@ -1,0 +1,31 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+build = "*"
+flake8 = "*"
+flake8-bandit = "*"
+flake8-bugbear = "*"
+flake8-commas = "*"
+flake8-docstrings = "*"
+flake8-eradicate = "*"
+flake8-import-order = "*"
+pep8-naming = "*"
+radon = "*"
+safety = "*"
+mypy = "*"
+pytest = "*"
+pytest-cov = "*"
+pytest-mock = "*"
+gunicorn = "*"
+pyeapi = "*"
+Flask = "*"
+
+[dev-packages]
+build = "*"
+switools = "*"
+
+[requires]
+python_version = "3.7"
