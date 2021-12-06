@@ -1,0 +1,45 @@
+name: earthly
+on:
+  workflow_call:
+    inputs:
+      target:
+        required: true
+        type: string
+    secrets:
+      gh_token:
+        required: true
+      acr_token:
+        required: true
+env:
+  EARTHLY_VERSION: 0.6.2
+  AZURE_ACR_URI: "workonline.azurecr.io"
+  AZURE_ACR_TOKEN_NAME: "gh-actions-eos-prefix-list-agent"
+jobs:
+  earthly:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: install earthly
+        run: |
+          sudo wget "https://github.com/earthly/earthly/releases/download/v${EARTHLY_VERSION}/earthly-linux-amd64" \
+            -O /usr/local/bin/earthly && \
+          sudo chmod +x /usr/local/bin/earthly
+      - name: bootstrap earthly
+        run: |
+          /usr/local/bin/earthly bootstrap
+      - name: login to azure acr
+        uses: docker/login-action@v1
+        with:
+          registry: ${{ env.AZURE_ACR_URI }}
+          username: ${{ env.AZURE_ACR_TOKEN_NAME }}
+          password: ${{ secrets.acr_token }}
+      - name: login to ghcr
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.gh_token }}
+      - name: build
+        uses: ./.github/actions/earthly
+        run: earthly -P --ci --output --push +${{ inputs.target }}
