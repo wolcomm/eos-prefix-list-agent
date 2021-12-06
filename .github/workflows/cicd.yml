@@ -84,6 +84,7 @@ jobs:
           build_args: "CEOS_VERSION=${{ matrix.ceos_version }}"
           artifact_name: coverage-ceos-${{ matrix.ceos_version }}
           artifact_path: coverage.xml
+          allow_privileged: true
           ghcr_token: ${{ secrets.GITHUB_TOKEN }}
           acr_token: ${{ secrets.AZURE_ACR_TOKEN }}
   earthly-workflow:
