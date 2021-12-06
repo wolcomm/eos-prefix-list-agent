@@ -73,6 +73,7 @@ runs:
         EARTHLY_PUSH: ${{ inputs.push }}
         EARTHLY_ALLOW_PRIVILEGED: ${{ inputs.allow_privileged }}
         EARTHLY_OUTPUT: ${{ inputs.artifact_path != '' }}
+        FORCE_COLOR: "1"
     - name: upload artifact
       if: inputs.artifact != ''
       uses: actions/upload-artifact@v2
