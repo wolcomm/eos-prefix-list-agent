@@ -5,6 +5,9 @@ on:
       target:
         required: true
         type: string
+      artifact:
+        required: false
+        type: string
     secrets:
       gh_token:
         required: true
@@ -40,5 +43,11 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.gh_token }}
-      - name: build
+      - name: run ${{inputs.target }} target
         run: earthly -P --ci --output --push +${{ inputs.target }}
+      - name: upload artifact
+        if: inputs.artifact != ''
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ inputs.target }}
+          path: ${{ inputs.artifact }}

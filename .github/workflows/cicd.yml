@@ -4,23 +4,43 @@ on:
   - pull_request
 env:
   DEFAULT_PYTHON: 3.7
-  EARTHLY_VERSION: 0.6.2
 jobs:
-  earthly-action:
-    runs-on: ubuntu-latest
-    steps:
-      - name: checkout
-        uses: actions/checkout@v2
-      - name: earthly
-        uses: ./.github/actions/earthly
-        with:
-          target: all
-          # ghcr_token: ${{ secrets.GITHUB_TOKEN }}
-          # acr_token: ${{ secrets.AZURE_ACR_TOKEN }}
-  earthly-workflow:
+  earthly-workflow-all:
     uses: wolcomm/eos-prefix-list-agent/.github/workflows/earthly.yml@py3-support
     with:
       target: all
+    secrets:
+      gh_token: ${{ secrets.GITHUB_TOKEN }}
+      acr_token: ${{ secrets.AZURE_ACR_TOKEN }}
+  earthly-safety:
+    uses: wolcomm/eos-prefix-list-agent/.github/workflows/earthly.yml@py3-support
+    with:
+      target: safety
+    secrets:
+      gh_token: ${{ secrets.GITHUB_TOKEN }}
+      acr_token: ${{ secrets.AZURE_ACR_TOKEN }}
+  earthly-lint:
+    needs: [earthly-safety]
+    uses: wolcomm/eos-prefix-list-agent/.github/workflows/earthly.yml@py3-support
+    with:
+      target: lint
+    secrets:
+      gh_token: ${{ secrets.GITHUB_TOKEN }}
+      acr_token: ${{ secrets.AZURE_ACR_TOKEN }}
+  earthly-typecheck:
+    needs: [earthly-safety]
+    uses: wolcomm/eos-prefix-list-agent/.github/workflows/earthly.yml@py3-support
+    with:
+      target: typecheck
+    secrets:
+      gh_token: ${{ secrets.GITHUB_TOKEN }}
+      acr_token: ${{ secrets.AZURE_ACR_TOKEN }}
+  earthly-build:
+    needs: [earthly-safety]
+    uses: wolcomm/eos-prefix-list-agent/.github/workflows/earthly.yml@py3-support
+    with:
+      target: build
+      artifact: dist/swix/*.swix
     secrets:
       gh_token: ${{ secrets.GITHUB_TOKEN }}
       acr_token: ${{ secrets.AZURE_ACR_TOKEN }}
