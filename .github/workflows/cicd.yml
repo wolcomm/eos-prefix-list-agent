@@ -9,6 +9,8 @@ jobs:
   earthly-action:
     runs-on: ubuntu-latest
     steps:
+      - name: checkout
+        uses: actions/checkout@v2
       - name: earthly
         uses: ./.github/actions/earthly
         with:
