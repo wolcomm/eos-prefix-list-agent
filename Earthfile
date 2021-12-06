@@ -123,7 +123,6 @@ test-image:
     SAVE ARTIFACT install-extension-script
 
     LABEL org.opencontainers.image.source=https://github.com/wolcomm/eos-prefix-list-agent
-    SAVE IMAGE eos-prefix-list-agent-test:$CEOS_VERSION
     SAVE IMAGE --push ghcr.io/wolcomm/eos-prefix-list-agent/ci-test:$CEOS_VERSION
 
 test:
