@@ -15,8 +15,8 @@ jobs:
         uses: ./.github/actions/earthly
         with:
           target: all
-          ghcr_token: ${{ secrets.GITHUB_TOKEN }}
-          acr_token: ${{ secrets.AZURE_ACR_TOKEN }}
+          # ghcr_token: ${{ secrets.GITHUB_TOKEN }}
+          # acr_token: ${{ secrets.AZURE_ACR_TOKEN }}
   earthly-workflow:
     uses: wolcomm/eos-prefix-list-agent/.github/workflows/earthly.yml@py3-support
     with:

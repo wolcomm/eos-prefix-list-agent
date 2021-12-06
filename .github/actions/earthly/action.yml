@@ -1,16 +1,17 @@
 name: earthly
 description: "Run an earthly target"
 inputs:
+  target:
+    description: "earthly target to run"
+    required: true
   earthly_version:
     description: "earthly release version"
     required: false
     default: "0.6.2"
-  target:
-    description: "earthly target to run"
-    required: true
   ghcr_token:
     description: "ghcr authentication token"
-    required: true
+    required: false
+    default: ${{ secrets.GITHUB_TOKEN }}
   acr_uri:
     description: "acr uri"
     required: false
@@ -21,7 +22,8 @@ inputs:
     default: "gh-actions-eos-prefix-list-agent"
   acr_token:
     description: "acr authentication token"
-    required: true
+    required: false
+    default: ${{ secrets.AZURE_ACR_TOKEN }}
 runs:
   using: composite
   steps:
