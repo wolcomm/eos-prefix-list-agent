@@ -21,7 +21,7 @@ deps:
     RUN mkdir -p src
     WORKDIR "src/"
     COPY --dir bin/ packaging/ prefix_list_agent/ tests/ .
-    COPY LICENSE pyproject.toml README.md setup.cfg tox.ini .
+    COPY LICENSE README.md pyproject.toml setup.cfg .
 
     LABEL org.opencontainers.image.source=https://github.com/wolcomm/eos-prefix-list-agent
     SAVE IMAGE --push ghcr.io/wolcomm/eos-prefix-list-agent/ci-deps:latest
@@ -39,9 +39,7 @@ lint:
 typecheck:
     FROM +deps
     RUN python -m pip install --user -r packaging/requirements-typecheck.txt
-    RUN python -m mypy \
-        --package prefix_list_agent \
-        --config-file tox.ini
+    RUN python -m mypy --package prefix_list_agent
 
 sdist:
     FROM +deps
@@ -75,9 +73,9 @@ build:
 
     RUN rpmdev-setuptree
 
-    COPY ./tools/build/eos-prefix-list-agent.spec ./rpmbuild/SPECS/
-    COPY ./tools/build/*-build.txt ./
-    COPY ./tools/build/manifest.yaml ./
+    COPY packaging/rpm/eos-prefix-list-agent.spec ./rpmbuild/SPECS/
+    COPY packaging/swix/manifest.yaml .
+    COPY packaging/*-build.txt .
 
     RUN python3 -m pip install \
             --disable-pip-version-check \
@@ -108,15 +106,15 @@ test-image:
     RUN python3 -m ensurepip --default-pip
     RUN python3 -m pip install --upgrade pip
 
-    COPY tools/test/requirements-test.txt ./
+    COPY packaging/requirements-test.txt .
 
     RUN python3 -m pip install --user -r "requirements-test.txt"
 
-    COPY tools/test/.coveragerc ./
-    COPY tools/test/startup-config /mnt/flash
-    COPY --dir tests ./
+    COPY pyproject.toml .
+    COPY tests/data/startup-config /mnt/flash/
+    COPY --dir tests .
 
-    COPY +build/*.swix /mnt/flash
+    COPY +build/*.swix /mnt/flash/
 
     RUN SWIX="$(basename $(find /mnt/flash -name '*.swix'))" && \
         echo "copy flash:/${SWIX} extension:" > install-extension-script && \
@@ -134,7 +132,7 @@ test:
     ARG --required CEOS_VERSION
     BUILD --build-arg CEOS_VERSION=$CEOS_VERSION +test-image
 
-    COPY +test-image/install-extension-script ./
+    COPY +test-image/install-extension-script .
 
     WITH DOCKER --load test-image:latest=+test-image --build-arg CEOS_VERSION=$CEOS_VERSION
         RUN docker run --detach --privileged --rm --name test test-image:latest && \
@@ -148,13 +146,12 @@ test:
             done; \
             [[ $started ]] && \
             docker exec --tty test Cli -p 15 -c "$(cat install-extension-script)" && \
-            docker exec --tty test .local/bin/pytest -vs \
-                --strict-markers \
-                --cov \
-                --cov-report="term-missing" \
-                --cov-report="xml" \
-                --cov-branch && \
+            docker exec --tty test .local/bin/pytest && \
             docker cp test:/root/coverage.xml ./
     END
 
     SAVE ARTIFACT coverage.xml AS LOCAL coverage.xml
+
+clean:
+    LOCALLY
+    RUN rm -rf dist/ coverage.xml

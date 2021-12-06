@@ -1,1 +1,23 @@
-../../tools/test/startup-config
+!
+! startup-config for test container
+!
+transceiver qsfp default-mode 4x10G
+!
+spanning-tree mode mstp
+!
+no aaa root
+!
+no ip routing
+!
+ip prefix-list AS-BAR source file:/tmp/prefix-lists/test/as-bar-4
+ip prefix-list AS-FOO source file:/tmp/prefix-lists/test/as-foo-4
+!
+ipv6 prefix-list AS-BAR source file:/tmp/prefix-lists/test/as-bar-6
+ipv6 prefix-list AS-FOO source file:/tmp/prefix-lists/test/as-foo-6
+!
+management api http-commands
+   no protocol https
+   protocol unix-socket
+   no shutdown
+!
+end

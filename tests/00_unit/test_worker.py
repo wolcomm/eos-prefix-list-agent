@@ -28,6 +28,23 @@ from prefix_list_agent.worker import PrefixListWorker
 import pytest
 
 
+@pytest.fixture(scope="module", params=("success", "sigterm", "error"))
+def write_results_side_effect(request):
+    """Provide a callable for use as a mock side effect for 'write_results'."""
+    class SideEffect:
+        case = request.param
+
+        def __call__(self, *args, **kwargs):
+            if self.case == "success":
+                return ({"foo": "bar"}, set())
+            elif self.case == "sigterm":
+                raise TermException
+            else:
+                raise RuntimeError
+
+    return SideEffect()
+
+
 class TestPrefixListWorker(object):
     """Test cases for the PrefixListWorker object."""
 
@@ -35,50 +52,40 @@ class TestPrefixListWorker(object):
         """Test case for PrefixListWorker initialisation."""
         assert isinstance(worker, PrefixListWorker)
 
-    @pytest.mark.parametrize(("case", "side_effect"), (
-        ("success", (({"foo": "bar"}, set()),)),
-        ("sigterm", TermException),
-        ("error", RuntimeError),
-    ))
-    def test_run(self, worker, mocker, case, side_effect):
+    def test_run(self, worker, mocker, write_results_side_effect):
         """Test case for 'run' method."""
         for method in ("get_policies", "get_configured", "get_data",
                        "refresh_all", "refresh_prefix_list", "notice"):
             mocker.patch.object(worker, method, autospec=True)
         mocker.patch.object(worker, "write_results", autospec=True,
-                            side_effect=side_effect)
+                            side_effect=write_results_side_effect)
         worker.run()
-        if case == "success":
+        if write_results_side_effect.case == "success":
             assert worker.data == {"foo": "bar"}
-        elif case == "sigterm":
+        elif write_results_side_effect.case == "sigterm":
             worker.notice.assert_called_once_with("Got SIGTERM signal: exiting.")  # noqa: E501
-        elif case == "error":
+        elif write_results_side_effect.case == "error":
             assert type(worker.error) is RuntimeError
         else:
-            raise ValueError(case)
+            raise ValueError(write_results_side_effect.case)
 
-    @pytest.mark.parametrize(("case", "side_effect"), (
-        ("success", (({"foo": "bar"}, set()),)),
-        ("sigterm", TermException),
-        ("error", RuntimeError),
-    ))
-    def test_start(self, worker, mocker, case, side_effect):
+    def test_start(self, worker, mocker, write_results_side_effect):
         """Test case for 'start' method."""
         for method in ("get_policies", "get_configured", "get_data",
                        "refresh_all", "refresh_prefix_list", "notice"):
             mocker.patch.object(worker, method, autospec=True)
         mocker.patch.object(worker, "write_results", autospec=True,
-                            side_effect=side_effect)
+                            side_effect=write_results_side_effect)
         worker.start()
         time.sleep(1)
-        if case == "success":
+        if write_results_side_effect.case == "success":
             assert worker.data == {"foo": "bar"}
-        elif case == "sigterm":
+        elif write_results_side_effect.case == "sigterm":
             assert worker.exitcode == 127 + signal.SIGTERM
-        elif case == "error":
+        elif write_results_side_effect.case == "error":
             assert type(worker.error) is RuntimeError
         else:
-            raise ValueError(case)
+            raise ValueError(write_results_side_effect.case)
         if worker.is_alive():
             worker.terminate()
             worker.join()

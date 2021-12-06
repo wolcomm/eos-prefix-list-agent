@@ -1,1 +1,1 @@
-../tools/build/constraints-build.txt
+pyparsing<3

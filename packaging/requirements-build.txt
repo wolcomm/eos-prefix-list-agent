@@ -1,1 +1,3 @@
-../tools/build/requirements-build.txt
+-c constraints-build.txt
+build==0.7.0
+switools==1.1
