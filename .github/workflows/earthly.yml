@@ -41,5 +41,4 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.gh_token }}
       - name: build
-        uses: ./.github/actions/earthly
         run: earthly -P --ci --output --push +${{ inputs.target }}
