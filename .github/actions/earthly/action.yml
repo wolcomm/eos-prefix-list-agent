@@ -47,7 +47,7 @@ runs:
       shell: bash
       run: |
         sudo wget "https://github.com/earthly/earthly/releases/download/v${{ inputs.earthly_version }}/earthly-linux-amd64" \
-          -O /usr/local/bin/earthly && \
+          -nv -O /usr/local/bin/earthly && \
         sudo chmod +x /usr/local/bin/earthly
     - name: bootstrap earthly
       shell: bash
