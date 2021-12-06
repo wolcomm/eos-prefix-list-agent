@@ -75,7 +75,7 @@ runs:
         EARTHLY_OUTPUT: ${{ inputs.artifact_path != '' }}
         FORCE_COLOR: "1"
     - name: upload artifact
-      if: inputs.artifact != ''
+      if: inputs.artifact_path != ''
       uses: actions/upload-artifact@v2
       with:
         name: ${{ inputs.artifact_name || inputs.target }}
