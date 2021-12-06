@@ -1,0 +1,80 @@
+name: earthly
+description: "Run an earthly target"
+inputs:
+  target:
+    description: "earthly target to run"
+    required: true
+  build_args:
+    description: "build-args for earthly target"
+    required: false
+  push:
+    description: "allow earthly push actions"
+    required: false
+    default: "true"
+  allow_privileged:
+    description: "allow earthly to run privileged containers"
+    required: false
+    default: "false"
+  earthly_version:
+    description: "earthly release version"
+    required: false
+    default: "0.6.2"
+  ghcr_token:
+    description: "ghcr authentication token"
+    required: true
+  acr_uri:
+    description: "acr uri"
+    required: false
+    default: "workonline.azurecr.io"
+  acr_token_name:
+    description: "acr authentication token name"
+    required: false
+    default: "gh-actions-eos-prefix-list-agent"
+  acr_token:
+    description: "acr authentication token"
+    required: true
+  artifact_path:
+    description: "artifact path to upload"
+    required: false
+  artifact_name:
+    description: "artifact name"
+    required: false
+runs:
+  using: composite
+  steps:
+    - name: install earthly
+      shell: bash
+      run: |
+        sudo wget "https://github.com/earthly/earthly/releases/download/v${{ inputs.earthly_version }}/earthly-linux-amd64" \
+          -O /usr/local/bin/earthly && \
+        sudo chmod +x /usr/local/bin/earthly
+    - name: bootstrap earthly
+      shell: bash
+      run: /usr/local/bin/earthly bootstrap
+    - name: login to azure acr
+      uses: docker/login-action@v1
+      with:
+        registry: ${{ inputs.acr_uri }}
+        username: ${{ inputs.acr_token_name }}
+        password: ${{ inputs.acr_token }}
+    - name: login to ghcr
+      uses: docker/login-action@v1
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ inputs.ghcr_token }}
+    - name: run ${{ inputs.target }} target
+      shell: bash
+      run: earthly +${{ inputs.target }}
+      env:
+        EARTHLY_CI: "true"
+        EARTHLY_BUILD_ARGS: ${{ inputs.build_args }}
+        EARTHLY_PUSH: ${{ inputs.push }}
+        EARTHLY_ALLOW_PRIVILEGED: ${{ inputs.allow_privileged }}
+        EARTHLY_OUTPUT: ${{ inputs.artifact_path != '' }}
+    - name: upload artifact
+      if: inputs.artifact != ''
+      uses: actions/upload-artifact@v2
+      with:
+        name: ${{ inputs.artifact_name || inputs.target }}
+        path: ${{ inputs.artifact_path }}
