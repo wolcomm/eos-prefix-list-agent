@@ -132,6 +132,8 @@ test-image:
     COPY tests/data/startup-config /mnt/flash/
     COPY --dir tests .
 
+    SAVE IMAGE --cache-from ghcr.io/wolcomm/eos-prefix-list-agent/ci-test:$CEOS_VERSION
+
     ARG LOCAL_PACKAGE
     IF [ -n "$LOCAL_PACKAGE" ]
         COPY $LOCAL_PACKAGE /mnt/flash/
