@@ -37,7 +37,7 @@ deps:
 
 safety:
     FROM +deps
-    RUN python -m pipenv run safety check --full-report
+    RUN --secret SAFETY_API_KEY python -m pipenv run safety check --full-report
 
 lint:
     FROM +deps
