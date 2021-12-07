@@ -87,29 +87,19 @@ jobs:
         with:
           files: coverage.xml
           env_vars: CEOS_VERSION
-  # build-docs:
-  #   needs: [safety]
-  #   runs-on: ubuntu-latest
-  #   env:
-  #     TOX_JOB: docs
-  #   steps:
-  #     - name: checkout
-  #       uses: actions/checkout@v2
-  #       with:
-  #         fetch-depth: 0
-  #     - name: setup python ${{ env.DEFAULT_PYTHON }}
-  #       uses: actions/setup-python@v2
-  #       with:
-  #         python-version: ${{ env.DEFAULT_PYTHON }}
-  #     - name: install ${{ env.TOX_JOB }} job runner
-  #       run: python -m pip install -r packaging/requirements-tox.txt
-  #     - name: run ${{ env.TOX_JOB }} job
-  #       run: tox -e $TOX_JOB
-  #     - name: upload built docs artifact
-  #       uses: actions/upload-artifact@v2
-  #       with:
-  #         name: docs
-  #         path: build/docs/html/
+  docs:
+    needs: [safety]
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: earthly
+        uses: ./.github/actions/earthly
+        with:
+          target: docs
+          artifact_path: dist/book
+          ghcr_token: ${{ secrets.GITHUB_TOKEN }}
+          acr_token: ${{ secrets.AZURE_ACR_TOKEN }}
   # publish-docs:
   #   if: ${{ github.event_name == 'push' }}
   #   needs:

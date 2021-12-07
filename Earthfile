@@ -174,6 +174,16 @@ test:
 
     SAVE ARTIFACT coverage.xml AS LOCAL coverage.xml
 
+docs:
+    FROM peaceiris/mdbook:latest
+    WORKDIR "/root"
+
+    COPY --dir docs .
+
+    RUN mdbook build docs/
+
+    SAVE ARTIFACT docs/book/ AS LOCAL dist/
+
 clean:
     LOCALLY
     RUN rm -rf dist/ coverage.xml
