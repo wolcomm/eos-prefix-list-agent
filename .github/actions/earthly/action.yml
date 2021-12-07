@@ -11,6 +11,7 @@ inputs:
   secrets:
     description: "secrets for earthly target"
     required: false
+    default: "DUMMY=true"
   push:
     description: "allow earthly push actions"
     required: false
