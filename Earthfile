@@ -132,7 +132,12 @@ test-image:
     COPY tests/data/startup-config /mnt/flash/
     COPY --dir tests .
 
-    COPY +build/*.swix /mnt/flash/
+    ARG LOCAL_PACKAGE
+    IF [ -n "$LOCAL_PACKAGE" ]
+        COPY $LOCAL_PACKAGE /mnt/flash/
+    ELSE
+        COPY +build/*.swix /mnt/flash/
+    END
 
     RUN SWIX="$(basename $(find /mnt/flash -name '*.swix'))" && \
         echo "copy flash:/${SWIX} extension:" > install-extension-script && \
