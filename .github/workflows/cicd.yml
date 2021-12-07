@@ -12,6 +12,7 @@ jobs:
         uses: ./.github/actions/earthly
         with:
           target: safety
+          secrets: "SAFETY_API_KEY=${{ secrets.SAFETY_API_KEY }}"
           ghcr_token: ${{ secrets.GITHUB_TOKEN }}
           acr_token: ${{ secrets.AZURE_ACR_TOKEN }}
   lint:

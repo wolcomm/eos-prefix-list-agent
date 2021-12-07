@@ -8,6 +8,9 @@ inputs:
     description: "build-args for earthly target"
     required: false
     default: "DUMMY=true"
+  secrets:
+    description: "secrets for earthly target"
+    required: false
   push:
     description: "allow earthly push actions"
     required: false
@@ -70,6 +73,7 @@ runs:
       env:
         EARTHLY_CI: "true"
         EARTHLY_BUILD_ARGS: ${{ inputs.build_args }}
+        EARTHLY_SECRETS: ${{ inputs.secrets }}
         EARTHLY_PUSH: ${{ inputs.push }}
         EARTHLY_ALLOW_PRIVILEGED: ${{ inputs.allow_privileged }}
         EARTHLY_OUTPUT: ${{ inputs.artifact_path != '' }}
