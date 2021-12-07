@@ -32,12 +32,6 @@ deps:
 
     RUN python -m pipenv sync --dev
 
-    #RUN python -m pip install \
-    #    --user \
-    #    --no-warn-script-location \
-    #    --progress-bar off \
-    #    -r "packaging/requirements-dev.txt"
-
     LABEL org.opencontainers.image.source=https://github.com/wolcomm/eos-prefix-list-agent
     SAVE IMAGE --push ghcr.io/wolcomm/eos-prefix-list-agent/ci-deps:latest
 
@@ -87,7 +81,6 @@ build:
     COPY packaging/rpm/eos-prefix-list-agent.spec ./rpmbuild/SPECS/
     COPY packaging/swix/manifest.yaml .
     COPY Pipfile Pipfile.lock .
-    #COPY packaging/*-build.txt .
 
     RUN python3 -m pip install \
             --disable-pip-version-check \
