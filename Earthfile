@@ -36,6 +36,7 @@ deps:
     SAVE IMAGE --push ghcr.io/wolcomm/eos-prefix-list-agent/ci-deps:latest
 
 safety:
+    BUILD +deps
     FROM +deps
     RUN --secret SAFETY_API_KEY python -m pipenv run safety check --full-report
 
