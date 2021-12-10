@@ -27,10 +27,11 @@ deps:
 
     RUN mkdir -p src
     WORKDIR "src/"
-    COPY --dir usr/ bin/ prefix_list_agent/ tests/ .
-    COPY LICENSE README.md Pipfile Pipfile.lock pyproject.toml setup.cfg .
-
+    COPY Pipfile Pipfile.lock .
     RUN python -m pipenv sync --dev
+
+    COPY --dir share/ lib/ bin/ prefix_list_agent/ tests/ .
+    COPY LICENSE README.md pyproject.toml setup.cfg .
 
     LABEL org.opencontainers.image.source=https://github.com/wolcomm/eos-prefix-list-agent
     SAVE IMAGE --push ghcr.io/wolcomm/eos-prefix-list-agent/ci-deps:latest
