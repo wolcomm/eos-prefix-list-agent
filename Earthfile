@@ -27,7 +27,7 @@ deps:
 
     RUN mkdir -p src
     WORKDIR "src/"
-    COPY --dir bin/ prefix_list_agent/ tests/ .
+    COPY --dir usr/ bin/ prefix_list_agent/ tests/ .
     COPY LICENSE README.md Pipfile Pipfile.lock pyproject.toml setup.cfg .
 
     RUN python -m pipenv sync --dev

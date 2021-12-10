@@ -1,0 +1,24 @@
+---
+vendor:
+  name: Workonline Communications
+  email: oss@workonline.africa
+# daemons:
+#   PrefixListAgent:
+#     exe: /usr/bin/PrefixListAgent
+schemas:
+  - &show_prefix_list_agent_schema
+    $schema: http://json-schema.org/draft-07/schema#
+    type: object
+    properties:
+      enabled:
+        type: boolean
+commands:
+  show_prefix_list_agent:
+    syntax: show prefix-list-agent
+    outputSchema: *show_prefix_list_agent_schema
+    mode: Unprivileged
+    data:
+      prefix-list-agent:
+        keyword:
+          help: show prefix-list-agent state
+...
