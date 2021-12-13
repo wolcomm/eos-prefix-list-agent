@@ -44,6 +44,10 @@ update the prefix-lists without calling the EOS config parser.
 
 %install
 %py2_install_wheel eos_prefix_list_agent_cli-%{version}-py2-none-any.whl
+mkdir -p %{buildroot}/%{_datadir}/CliExtension
+mkdir -p %{buildroot}/%{python2_sitelib}/CliPlugin
+ln -s %{python2_sitelib}/prefix_list_agent_cli/extension.yaml %{buildroot}%{_datadir}/CliExtension/PrefixListAgent.yaml
+ln -s %{python2_sitelib}/prefix_list_agent_cli/extension.py %{buildroot}%{python2_sitelib}/CliPlugin/PrefixListAgent.py
 
 
 %check
@@ -54,6 +58,8 @@ update the prefix-lists without calling the EOS config parser.
 %license LICENSE*
 %{python2_sitelib}/eos_prefix_list_agent_cli-%{version}.dist-info/
 %{python2_sitelib}/prefix_list_agent_cli/
+%{python2_sitelib}/CliPlugin/PrefixListAgent.py
+%{_datadir}/CliExtension/PrefixListAgent.yaml
 
 
 %changelog
