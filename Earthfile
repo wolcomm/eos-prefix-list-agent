@@ -62,7 +62,7 @@ typecheck:
 sdist:
     ARG --required PKG
     FROM --build-arg PKG=$PKG +src
-    COPY --dir .git/ .
+    COPY --dir .git/ ..
     RUN python -m pipenv run python -m build --sdist --outdir dist/
 
     SAVE ARTIFACT dist/*.tar.gz AS LOCAL dist/sdist/
