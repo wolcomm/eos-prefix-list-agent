@@ -13,8 +13,8 @@
 
 import sys
 
+from prefix_list_agent import start
 from prefix_list_agent.agent import PrefixListAgent
-from prefix_list_agent.cli import start
 
 import pytest
 

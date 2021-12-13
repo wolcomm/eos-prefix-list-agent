@@ -12,10 +12,24 @@
 """prefix_list_agent Package."""
 
 import logging
+import sys
+
+import eossdk
 
 from .agent import PrefixListAgent
-from .cli import start
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
-__all__ = ["PrefixListAgent", "start"]
+
+def start(sdk: eossdk.Sdk) -> int:
+    """Start the agent."""
+    try:
+        # create an instance of the agent
+        _ = PrefixListAgent(sdk)
+        # enter the sdk event-loop
+        sdk.main_loop(sys.argv)
+    except KeyboardInterrupt:
+        return 130
+    except Exception:
+        raise
+    return 0

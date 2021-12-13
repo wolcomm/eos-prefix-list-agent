@@ -9,24 +9,8 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations under
 # the License.
-"""prefix_list_agent cli entry point."""
+"""prefix_list_agent_cli Package."""
 
-import sys
+import logging
 
-import eossdk
-
-from . import PrefixListAgent
-
-
-def start(sdk: eossdk.Sdk) -> int:
-    """Start the agent."""
-    try:
-        # create an instance of the agent
-        _ = PrefixListAgent(sdk)
-        # enter the sdk event-loop
-        sdk.main_loop(sys.argv)
-    except KeyboardInterrupt:
-        return 130
-    except Exception:
-        raise
-    return 0
+logging.getLogger(__name__).addHandler(logging.NullHandler())

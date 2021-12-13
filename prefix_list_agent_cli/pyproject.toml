@@ -1,0 +1,37 @@
+[build-system]
+requires = [
+    "setuptools==44.1.1",
+    "wheel==0.37.0",
+    "setuptools_scm[toml]==5.0.2",
+]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
+local_scheme = "no-local-version"
+
+[tool.pytest.ini_options]
+addopts = "-vs --strict-markers --cov --cov-report=term-missing --cov-report=xml --cov-branch"
+xfail_strict = true
+
+[tool.coverage.run]
+include = [
+    "*/prefix_list_agent/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    ".def __repr__.",
+    "if __name__ == .__main__.:",
+    "if typing.TYPE_CHECKING:",
+    "raise NotImplementedError",
+]
+
+[tool.mypy]
+pretty = true
+strict = true
+show_error_codes = true
+
+[[tool.mypy.overrides]]
+module = "eossdk.*"
+ignore_missing_imports = true

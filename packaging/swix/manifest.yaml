@@ -1,3 +1,4 @@
 metadataVersion: 1.0
 agentsToRestart:
+  - ConfigAgent
   - PrefixListAgent
