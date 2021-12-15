@@ -57,7 +57,7 @@ lint:
 typecheck:
     ARG --required PKG
     FROM --build-arg PKG=$PKG +src
-    RUN python -m pipenv run mypy --package prefix_list_agent
+    RUN python -m pipenv run mypy --package $PKG
 
 sdist:
     ARG --required PKG

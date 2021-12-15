@@ -34,5 +34,5 @@ strict = true
 show_error_codes = true
 
 [[tool.mypy.overrides]]
-module = "eossdk.*"
+module = "CliExtension"
 ignore_missing_imports = true

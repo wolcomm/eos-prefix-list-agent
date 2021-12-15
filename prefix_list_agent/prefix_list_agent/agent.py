@@ -64,7 +64,7 @@ class PrefixListAgent(PrefixListBase,
         return self._rptk_endpoint
 
     @rptk_endpoint.setter
-    def rptk_endpoint(self, url: str) -> None:
+    def rptk_endpoint(self, url: typing.Optional[str]) -> None:
         """Set 'rptk_endpoint' property."""
         self._rptk_endpoint = url
 
