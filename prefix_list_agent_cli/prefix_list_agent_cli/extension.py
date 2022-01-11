@@ -11,8 +11,6 @@
 # the License.
 """PrefixListAgent CLI plugin handlers."""
 
-from __future__ import print_function, unicode_literals
-
 from typing import Any, Dict, Optional, Text
 
 import CliExtension
@@ -41,17 +39,17 @@ class ShowPrefixListAgent(CliExtension.ShowCommandClass):  # type: ignore[misc]
         print(data)
 
 
-class PrefixListAgentCfgShutdown(CliExtension.CliCommandClass):  # type: ignore[misc]  # noqa: E501
-    """Handlers for `[no] shutdown` commands."""
+class PrefixListAgentCfgDisabled(CliExtension.CliCommandClass):  # type: ignore[misc]  # noqa: E501
+    """Handlers for `[no] disabled` commands."""
 
     def handler(self, ctx):
         # type: (Any) -> None
-        """Handle `shutdown` command."""
+        """Handle `disabled` command."""
         ctx.daemon.config.disable()
 
     def noHandler(self, ctx):  # noqa: N802
         # type: (Any) -> None
-        """Handle `no shutdown` command."""
+        """Handle `no disabled` command."""
         ctx.daemon.config.enable()
 
 
@@ -80,28 +78,28 @@ class PrefixListAgentCfgNullable(PrefixListAgentCfg):
 class PrefixListAgentCfgEndpoint(PrefixListAgentCfgNullable):
     """Handlers for `[no] rptk-endpoint <url>` command."""
 
-    option_key = "rptk_endpoint"
+    option_key = "rptk-endpoint"
     arg_key = "<url>"
 
 
 class PrefixListAgentCfgSrcDir(PrefixListAgentCfg):
     """Handlers for `source-directory <path>` command."""
 
-    option_key = "source_dir"
+    option_key = "source-directory"
     arg_key = "<path>"
 
 
 class PrefixListAgentCfgInterval(PrefixListAgentCfg):
     """Handlers for `refresh-interval <int>` command."""
 
-    option_key = "refresh_interval"
+    option_key = "refresh-interval"
     arg_key = "<int>"
 
 
 class PrefixListAgentCfgDelay(PrefixListAgentCfgNullable):
     """Handlers for `[no] update-delay <int>` command."""
 
-    option_key = "update_delay"
+    option_key = "update-delay"
     arg_key = "<int>"
 
 
@@ -109,8 +107,8 @@ def Plugin(ctx):  # noqa: N802
     # type: (Any) -> None
     """Initialise CLI plugin."""
     CliExtension.registerCommand("show_prefix_list_agent", ShowPrefixListAgent)
-    CliExtension.registerCommand("cfg_prefix_list_agent_shutdown",
-                                 PrefixListAgentCfgShutdown)
+    CliExtension.registerCommand("cfg_prefix_list_agent_disabled",
+                                 PrefixListAgentCfgDisabled)
     CliExtension.registerCommand("cfg_prefix_list_agent_endpoint",
                                  PrefixListAgentCfgEndpoint)
     CliExtension.registerCommand("cfg_prefix_list_agent_source_dir",

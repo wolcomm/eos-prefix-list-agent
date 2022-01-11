@@ -16,10 +16,10 @@ from prefix_list_agent.base import PrefixListBase
 import pytest
 
 
-class TestPrefixListAgent(object):
+class TestPrefixListBase(object):
     """Test cases for PrefixListBase object."""
 
-    def test_init(self, sdk, mocker):
+    def test_init(self, mocker):
         """Test case for PrefixListAgent initialisation."""
         mocker.patch("eossdk.Tracer", autospec=True)
         base = PrefixListBase()

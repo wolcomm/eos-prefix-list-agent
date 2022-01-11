@@ -20,6 +20,8 @@ import typing
 import eossdk
 
 from .base import PrefixListBase
+from .exceptions import ConfigValueError
+from .types import ConfigVal, StatusVal
 from .worker import PrefixListWorker
 
 
@@ -28,9 +30,6 @@ class PrefixListAgent(PrefixListBase,
                       eossdk.TimeoutHandler,  # type: ignore[misc]
                       eossdk.FdHandler):  # type: ignore[misc]
     """An EOS SDK based agent that creates prefix-list policy objects."""
-
-    agent_options = ("rptk_endpoint", "source_dir", "refresh_interval",
-                     "update_delay")
 
     def __init__(self, sdk: eossdk.Sdk):
         """Initialise the agent instance."""
@@ -47,115 +46,116 @@ class PrefixListAgent(PrefixListBase,
         # set worker process to None
         self._worker: typing.Optional[PrefixListWorker] = None
         self.watching: typing.Set[multiprocessing.connection.Connection] = set()  # noqa: E501
-        # set default confg options
-        self._rptk_endpoint: typing.Optional[str] = None
-        self._source_dir = "/tmp/prefix-lists"  # noqa: S108
-        self._refresh_interval = 3600
-        self._update_delay: typing.Optional[int] = None
-        # create state containers
-        self._status: typing.Optional[str] = None
-        self._last_start: typing.Optional[datetime.datetime] = None
-        self._last_end: typing.Optional[datetime.datetime] = None
-        self._result: typing.Optional[str] = None
 
+    def option(self,
+               typ: typing.Callable[[str], ConfigVal],
+               key: str,
+               default: ConfigVal) -> ConfigVal:
+        """Get configuration option value."""
+        if not self.agent_mgr.agent_option_exists(key):
+            return default
+        return typ(self.agent_mgr.agent_option(key))
+
+    # TODO: 'rptk-endpoint' should not be optional
     @property
     def rptk_endpoint(self) -> typing.Optional[str]:
-        """Get 'rptk_endpoint' property."""
-        return self._rptk_endpoint
-
-    @rptk_endpoint.setter
-    def rptk_endpoint(self, url: typing.Optional[str]) -> None:
-        """Set 'rptk_endpoint' property."""
-        self._rptk_endpoint = url
+        """Get 'rptk-endpoint' option."""
+        return self.option(str, "rptk-endpoint", None)
 
     @property
     def source_dir(self) -> str:
-        """Get 'source_dir' property."""
-        return self._source_dir
-
-    @source_dir.setter
-    def source_dir(self, path: str) -> None:
-        """Set 'source_dir' property."""
-        self._source_dir = path
+        """Get 'source-directory' option."""
+        return self.option(str, "source-directory", "/tmp/prefix-lists")  # noqa: S108, E501
 
     @property
     def refresh_interval(self) -> int:
-        """Get 'refresh_interval' property."""
-        return self._refresh_interval
-
-    @refresh_interval.setter
-    def refresh_interval(self, i: int) -> None:
-        """Set 'refresh_interval' property."""
-        i = int(i)
-        if i in range(10, 86400):
-            self._refresh_interval = i
-        else:
-            raise ValueError("refresh_interval must be in range 1 - 86399")
+        """Get 'refresh-interval' option."""
+        def validate(s: str) -> int:
+            i = int(s)
+            if i not in range(10, 86401):
+                raise ConfigValueError("refresh-interval must be in range 10 - 86400")  # noqa: E501
+            return i
+        return self.option(validate, "refresh-interval", 3600)
 
     @property
     def update_delay(self) -> typing.Optional[int]:
-        """Get 'update_delay' property."""
-        return self._update_delay
-
-    @update_delay.setter
-    def update_delay(self, i: typing.Optional[int]) -> None:
-        """Set 'update_delay' property."""
-        if i is not None:
-            i = int(i)
+        """Get 'update-delay' option."""
+        def validate(s: str) -> int:
+            i = int(s)
             if i not in range(1, 121):
-                raise ValueError("update_delay must be in range 1 - 120")
-        self._update_delay = i
+                raise ConfigValueError("update-delay must be in range 1 - 120")
+            return i
+        return self.option(validate, "update-delay", None)
+
+    def status_get(self,
+                   typ: typing.Callable[[str], StatusVal],
+                   key: str) -> StatusVal:
+        """Get agent state key-value-pair."""
+        return typ(self.agent_mgr.status(key))
+
+    # TODO: check max key/val lengths (512 char/10KB)
+    def status_set(self, key: str, val: typing.Optional[StatusVal]) -> None:
+        """Set agent state key-value-pair."""
+        if val is None:
+            self.debug(f"deleting state key {key}")
+            self.agent_mgr.status_del(key)
+        else:
+            self.debug(f"setting state '{key}' = '{val}'")
+            self.agent_mgr.status_set(key, val)
 
     @property
     def status(self) -> typing.Optional[str]:
         """Get 'status' property."""
-        return self._status
+        return self.status_get(lambda s: s or None, "status")
 
     @status.setter
     def status(self, s: str) -> None:
         """Set 'status' property."""
-        self._status = s
-        self.agent_mgr.status_set("status", self.status)
-        self.info("Status: {}".format(self.status))
+        self.status_set("status", s)
+        self.info(f"Status: {s}")
 
     @property
     def result(self) -> typing.Optional[str]:
         """Get 'result' property."""
-        return self._result
+        return self.status_get(lambda s: s or None, "result")
 
     @result.setter
     def result(self, r: str) -> None:
         """Set 'result' property."""
-        self._result = r
-        self.agent_mgr.status_set("result", self.result)
-        self.notice(f"Result: {self.result}")
+        self.status_set("result", r)
+        self.notice(f"Result: {r}")
+
+    @staticmethod
+    def timestamp(ts: str) -> typing.Optional[datetime.datetime]:
+        """Parse an ISO timestamp."""
+        if not ts:
+            return None
+        return datetime.datetime.fromisoformat(ts)
 
     @property
     def last_start(self) -> typing.Optional[datetime.datetime]:
-        """Set the 'last_start' timestamp."""
-        return self._last_start
+        """Set the 'last-start' timestamp."""
+        return self.status_get(self.timestamp, "last-start")
 
     @last_start.setter
     def last_start(self, ts: datetime.datetime) -> None:
-        """Set the 'last_start' timestamp."""
+        """Set the 'last-start' timestamp."""
         if not isinstance(ts, datetime.datetime):
-            raise TypeError(f"Expected datetime.datetime, got {ts}")
-        self._last_start = ts
-        self.agent_mgr.status_set("last_start", str(self.last_start))
+            raise TypeError(f"expected 'datetime' object, got {ts}")
+        self.status_set("last-start", ts.isoformat())
         self.info(f"Last start: {ts}")
 
     @property
     def last_end(self) -> typing.Optional[datetime.datetime]:
-        """Set the 'last_end' timestamp."""
-        return self._last_end
+        """Set the 'last-end' timestamp."""
+        return self.status_get(self.timestamp, "last-end")
 
     @last_end.setter
     def last_end(self, ts: datetime.datetime) -> None:
-        """Set the 'last_end' timestamp."""
+        """Set the 'last-end' timestamp."""
         if not isinstance(ts, datetime.datetime):
-            raise TypeError(f"Expected datetime.datetime, got {ts}")
-        self._last_end = ts
-        self.agent_mgr.status_set("last_end", str(self.last_end))
+            raise TypeError(f"expected 'datetime' object, got {ts}")
+        self.status_set("last-end", ts.isoformat())
         self.info(f"Last end: {ts}")
 
     @property
@@ -165,27 +165,9 @@ class PrefixListAgent(PrefixListBase,
             raise RuntimeError("attempted to access uninitialized worker.")
         return self._worker
 
-    def configure(self) -> None:
-        """Read and set all configuration options."""
-        self.info("Reading configuration options")
-        for key in self.agent_mgr.agent_option_iter():
-            value = self.agent_mgr.agent_option(key)
-            self.set(key, value)
-
-    def set(self, key: str, value: typing.Any) -> None:
-        """Set a configuration option."""
-        if not value:
-            value = None
-        self.info(f"Setting configuration '{key}'='{value}'")
-        if key in self.agent_options:
-            setattr(self, key, value)
-        else:
-            self.warning(f"Ignoring unknown option '{key}'")
-
     def start(self) -> None:
         """Start up the agent."""
         self.status = "init"
-        self.configure()
         self.init()
         self.run()
 
@@ -197,17 +179,17 @@ class PrefixListAgent(PrefixListBase,
         """Create a worker instance."""
         self.info("Initialising worker")
         assert self.rptk_endpoint is not None  # noqa: S101
-        self._worker = PrefixListWorker(endpoint=self.rptk_endpoint,
-                                        path=self.source_dir,
-                                        eapi=self.eapi_mgr,
-                                        update_delay=self.update_delay)
+        self._worker = PrefixListWorker(rptk_endpoint=self.rptk_endpoint,
+                                        source_dir=self.source_dir,
+                                        update_delay=self.update_delay,
+                                        eapi=self.eapi_mgr)
 
     def run(self) -> None:
         """Spawn worker process."""
         self.status = "running"
         if self.rptk_endpoint is not None:
-            self.last_start = datetime.datetime.now()
             try:
+                self.last_start = datetime.datetime.now()
                 self.init_worker()
                 self.watch(self.worker.p_data, "result")
                 self.watch(self.worker.p_err, "error")
@@ -218,7 +200,7 @@ class PrefixListAgent(PrefixListBase,
                 self.err(f"Starting worker failed: {e}")
                 self.failure(err=e)
         else:
-            self.warning("'rptk_endpoint' is not set")
+            self.warning("'rptk-endpoint' is not set")
             self.sleep()
 
     def watch(self,
@@ -343,10 +325,6 @@ class PrefixListAgent(PrefixListBase,
     def on_initialized(self) -> None:
         """Start the agent after initialisation."""
         self.start()
-
-    def on_agent_option(self, key: str, value: str) -> None:
-        """Handle a change to a configuration option."""
-        self.set(key, value)
 
     def on_agent_enabled(self, enabled: bool) -> None:
         """Handle a change in the admin state of the agent."""

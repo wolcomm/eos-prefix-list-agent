@@ -13,6 +13,10 @@
 
 import typing
 
+ConfigVal = typing.TypeVar("ConfigVal")
+
+StatusVal = typing.TypeVar("StatusVal")
+
 Policies = typing.Dict[str, str]
 
 Configured = typing.Dict[

@@ -39,20 +39,20 @@ class PrefixListWorker(multiprocessing.Process, PrefixListBase):
     """Worker to fetch and process IRR data."""
 
     def __init__(self,
-                 endpoint: str,
-                 path: str,
-                 eapi: eossdk.EapiMgr,
+                 rptk_endpoint: str,
+                 source_dir: str,
                  update_delay: typing.Optional[int],
+                 eapi: eossdk.EapiMgr,
                  *args: typing.Any,
                  **kwargs: typing.Any) -> None:
         """Initialise an PrefixListWorker instance."""
         super(PrefixListWorker, self).__init__(*args, **kwargs)
         PrefixListBase.__init__(self)
-        self.endpoint = endpoint
-        self.path = path
-        self.eapi = eapi
+        self.rptk_endpoint = rptk_endpoint
+        self.source_dir = source_dir
         self.update_delay = update_delay
-        self.path_re = re.compile(PATH_RE.format(self.path.rstrip("/")))
+        self.eapi = eapi
+        self.path_re = re.compile(PATH_RE.format(self.source_dir.rstrip("/")))
         self._p_err, self._c_err = multiprocessing.Pipe(duplex=False)
         self._p_data, self._c_data = multiprocessing.Pipe(duplex=False)
 
@@ -217,7 +217,7 @@ class PrefixListWorker(multiprocessing.Process, PrefixListBase):
             if not objs:
                 self.info(f"No objects with policy: {policy}")
                 continue
-            policy_dir = os.path.join(self.path, policy)
+            policy_dir = os.path.join(self.source_dir, policy)
             if not os.path.isdir(policy_dir):
                 self.info(f"Creating directory {policy_dir}")
                 os.makedirs(policy_dir)
@@ -295,7 +295,7 @@ class PrefixListWorker(multiprocessing.Process, PrefixListBase):
 
     def rptk_request(self, url_path: str) -> RptkResult:
         """Perform a query against the RPTK endpoint."""
-        url = "{}/{}".format(self.endpoint.rstrip("/"),
+        url = "{}/{}".format(self.rptk_endpoint.rstrip("/"),
                              url_path.lstrip("/"))
         self.debug(f"Querying RPTK endpoint at {url}")
         try:

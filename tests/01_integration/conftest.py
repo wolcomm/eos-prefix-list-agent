@@ -42,13 +42,12 @@ def node():
 def configure_daemon(node):
     """Configure the agent as an EOS ProcMgr daemon."""
     agent_config = [
-        "trace PrefixListAgent-PrefixListAgent setting PrefixList*/*",
-        "daemon PrefixListAgent",
-        "exec /usr/bin/PrefixListAgent",
-        "option rptk_endpoint value http://127.0.0.1:8000/",
-        "option refresh_interval value 10",
-        "option update_delay value 1",
-        "no shutdown",
+        "trace PrefixListAgent setting PrefixList*/*",
+        "prefix-list-agent",
+        "rptk-endpoint http://127.0.0.1:8000/",
+        "refresh-interval 10",
+        "update-delay 1",
+        "no disabled",
     ]
     node.config(agent_config)
     time.sleep(3)

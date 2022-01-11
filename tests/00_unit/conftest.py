@@ -25,6 +25,11 @@ import pytest
 class DummySdk(object):
     """Dummy class to stub-out eossdk interactions in test cases."""
 
+    def __init__(self, **options):
+        """Initialise dummy sdk stub."""
+        self.options = options
+        self.state = dict()
+
     def name(self):
         """Stub for 'name' method."""
         return "PrefixListAgent"
@@ -39,19 +44,28 @@ class DummySdk(object):
         """Stub for 'get_agent_mgr' method."""
         mgr = unittest.mock.create_autospec(eossdk.AgentMgr)
 
-        test_options = {"rptk_endpoint": "https://example.com",
-                        "source_dir": "/foo/bar",
-                        "refresh_interval": 60,
-                        "update_delay": 1,
-                        "bad_option": None}
-
-        def agent_option_iter():
-            return test_options.keys()
-        mgr.agent_option_iter.side_effect = agent_option_iter
+        def agent_option_exists(key):
+            return key in self.options and self.options[key] is not None
+        mgr.agent_option_exists.side_effect = agent_option_exists
 
         def agent_option(key):
-            return test_options[key]
+            return self.options[key]
         mgr.agent_option.side_effect = agent_option
+
+        def status(key):
+            return self.state.get(key)
+        mgr.status.side_effect = status
+
+        def status_del(key):
+            try:
+                del self.state[key]
+            except KeyError:
+                pass
+        mgr.status_del.side_effect = status_del
+
+        def status_set(key, val):
+            self.state[key] = val
+        mgr.status_set.side_effect = status_set
 
         return mgr
 
@@ -94,14 +108,16 @@ def sdk():
     return DummySdk()
 
 
-@pytest.fixture()
-def agent(sdk, mocker):
+@pytest.fixture(params=({"rptk-endpoint": "https://example.com"},))
+def agent(request, mocker):
     """Provide a PrefixListAgent instance with mocked Mgrs."""
     for cls in PrefixListAgent.mro():
         if cls.__module__ == "eossdk":
             mocker.patch("eossdk.{}".format(cls.__name__), autospec=True)
+    # opts = getattr(request, "param", {})
+    opts = request.param
+    sdk = DummySdk(**opts)
     agent = PrefixListAgent(sdk)
-    agent.rptk_endpoint = "https://example.com"
     return agent
 
 

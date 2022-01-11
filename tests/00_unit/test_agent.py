@@ -16,7 +16,8 @@ import signal
 import time
 
 from prefix_list_agent.agent import PrefixListAgent
-from prefix_list_agent.exceptions import TermException, handle_sigterm
+from prefix_list_agent.exceptions import (ConfigValueError, TermException,
+                                          handle_sigterm)
 
 import pytest
 
@@ -28,41 +29,39 @@ class TestPrefixListAgent(object):
         """Test case for PrefixListAgent initialisation."""
         assert isinstance(agent, PrefixListAgent)
 
-    def test_property_rptk_endpoint(self, agent):
-        """Test 'rptk_endpoint' getter and setter."""
-        assert agent.rptk_endpoint == "https://example.com"
-        test_value = "https://example.net"
-        agent.rptk_endpoint = test_value
-        assert agent.rptk_endpoint == test_value
+    # def test_property_rptk_endpoint(self, agent):
+    #     """Test 'rptk_endpoint' getter and setter."""
+    #     assert agent.rptk_endpoint == "https://example.com"
+    #     test_value = "https://example.net"
+    #     agent.rptk_endpoint = test_value
+    #     assert agent.rptk_endpoint == test_value
 
-    def test_property_source_dir(self, agent):
-        """Test 'source_dir' getter and setter."""
-        assert agent.source_dir == "/tmp/prefix-lists"  # noqa: S108
-        test_value = "/foo/bar"
-        agent.source_dir = test_value
-        assert agent.source_dir == test_value
+    # def test_property_source_dir(self, agent):
+    #     """Test 'source_dir' getter and setter."""
+    #     assert agent.source_dir == "/tmp/prefix-lists"  # noqa: S108
+    #     test_value = "/foo/bar"
+    #     agent.source_dir = test_value
+    #     assert agent.source_dir == test_value
 
-    def test_property_refresh_interval(self, agent):
-        """Test 'refresh_interval' getter and setter."""
-        assert agent.refresh_interval == 3600
-        test_value = 60
-        agent.refresh_interval = test_value
-        assert agent.refresh_interval == test_value
-        for fail_value in ("x", 5, 100000):
-            with pytest.raises(ValueError):
-                agent.refresh_interval = fail_value
-        assert agent.refresh_interval == test_value
+    @pytest.mark.parametrize(("agent", "value"),
+                             (({}, 3600),
+                              ({"refresh-interval": 60}, 60),
+                              pytest.param({"refresh-interval": 86500}, None,
+                                  marks=pytest.mark.xfail(raises=ConfigValueError))),  # noqa: E501
+                             indirect=("agent",))
+    def test_property_refresh_interval(self, agent, value):
+        """Test 'refresh_interval' getter."""
+        assert agent.refresh_interval == value
 
-    def test_property_update_delay(self, agent):
-        """Test 'update_delay' getter and setter."""
-        assert agent.update_delay is None
-        test_value = 5
-        agent.update_delay = test_value
-        assert agent.update_delay == test_value
-        for fail_value in ("x", 0, 100000):
-            with pytest.raises(ValueError):
-                agent.update_delay = fail_value
-        assert agent.update_delay == test_value
+    @pytest.mark.parametrize(("agent", "value"),
+                             (({}, None),
+                              ({"update-delay": 10}, 10),
+                              pytest.param({"update-delay": 0}, None,
+                                  marks=pytest.mark.xfail(raises=ConfigValueError))),  # noqa: E501
+                             indirect=("agent",))
+    def test_property_update_delay(self, agent, value):
+        """Test 'update_delay' getter."""
+        assert agent.update_delay == value
 
     def test_property_status(self, agent):
         """Test 'status' getter and setter."""
@@ -70,6 +69,8 @@ class TestPrefixListAgent(object):
         test_value = "test"
         agent.status = test_value
         assert agent.status == test_value
+        agent.status = None
+        assert agent.status is None
 
     def test_property_result(self, agent):
         """Test 'result' getter and setter."""
@@ -77,56 +78,30 @@ class TestPrefixListAgent(object):
         test_value = "test"
         agent.result = test_value
         assert agent.result == test_value
+        agent.result = None
+        assert agent.result is None
 
-    def test_property_timestamps(self, agent):
+    @pytest.mark.parametrize("prop", ("last_start", "last_end"))
+    def test_property_timestamps(self, agent, prop):
         """Test 'last_start' and 'last_end' getters and setters."""
-        for prop in ("last_start", "last_end"):
-            assert getattr(agent, prop) is None
-            test_value = datetime.datetime.now()
-            setattr(agent, prop, test_value)
-            assert getattr(agent, prop) == test_value
-            with pytest.raises(TypeError):
-                setattr(agent, prop, "foo")
-            assert getattr(agent, prop) == test_value
+        assert getattr(agent, prop) is None
+        test_value = datetime.datetime.now()
+        setattr(agent, prop, test_value)
+        assert getattr(agent, prop) == test_value
+        with pytest.raises(TypeError):
+            setattr(agent, prop, "foo")
+        assert getattr(agent, prop) == test_value
 
-    def test_configure(self, agent):
-        """Test 'configure' method."""
-        agent.configure()
-        agent.agent_mgr.agent_option_iter.assert_called_once()
-        assert agent.agent_mgr.agent_option.call_count == 5
-
-    @pytest.mark.parametrize(("key", "value"), (
-        ("rptk_endpoint", "https://x.com"),
-        ("source_dir", "/foo/bar"),
-        ("refresh_interval", 60),
-        ("update_delay", 1),
-        ("bad_option", None),
-    ))
-    def test_set(self, agent, mocker, key, value):
-        """Test case for 'set' method."""
-        mocker.patch.object(agent, "warning", autospec=True)
-        agent.set(key, value)
-        if key in agent.agent_options:
-            assert getattr(agent, key) == value
-        else:
-            agent.warning.assert_called_once_with("Ignoring unknown option '{}'"  # noqa: E501
-                                                  .format(key))
-
-    @pytest.mark.parametrize(("agent_key", "worker_key", "value"), (
-        ("rptk_endpoint", "endpoint", "https://foo.bar"),
-        ("source_dir", "path", "/quux/baz"),
-        ("update_delay", "update_delay", None),
-        ("update_delay", "update_delay", 1),
-    ))
-    def test_init_worker(self, agent, agent_key, worker_key, value):
+    def test_init_worker(self, agent):
         """Test case for `init_worker` method."""
-        agent.set(agent_key, value)
         agent.init_worker()
-        assert getattr(agent.worker, worker_key) == value
+        assert agent.rptk_endpoint == agent.worker.rptk_endpoint
+        assert agent.source_dir == agent.worker.source_dir
+        assert agent.update_delay == agent.worker.update_delay
 
     def test_start(self, agent, mocker):
         """Test case for 'start' method."""
-        methods = ("configure", "init", "run")
+        methods = ("init", "run")
         for method in methods:
             mocker.patch.object(agent, method, autospec=True)
         agent.start()
@@ -134,15 +109,16 @@ class TestPrefixListAgent(object):
             getattr(agent, method).assert_called_once_with()
 
     @pytest.mark.parametrize("side_effect", ((None,), RuntimeError()))
-    @pytest.mark.parametrize("rptk_endpoint", ("https://example.com", None))
-    def test_run(self, agent, worker, mocker, side_effect, rptk_endpoint):
+    @pytest.mark.parametrize("agent",
+                             ({}, {"rptk-endpoint": "https://example.com"}),
+                             indirect=True)
+    def test_run(self, agent, mocker, side_effect):
         """Test case for 'run' method."""
         mock_worker = mocker.patch("prefix_list_agent.agent.PrefixListWorker",
                                    autospec=True)
         mock_worker.return_value.start.side_effect = side_effect
         for method in ("watch", "failure", "sleep"):
             mocker.patch.object(agent, method, autospec=True)
-        agent.rptk_endpoint = rptk_endpoint
         agent.run()
         if agent.rptk_endpoint is None:
             agent.sleep.assert_called_once_with()
@@ -183,10 +159,10 @@ class TestPrefixListAgent(object):
         mock_worker = mocker.patch("prefix_list_agent.agent.PrefixListWorker",
                                    autospec=True)
         mock_worker.return_value.data = stats
-        agent._worker = mock_worker(endpoint=agent.rptk_endpoint,
-                                    path=agent.source_dir,
-                                    eapi=agent.eapi_mgr,
-                                    update_delay=agent.update_delay)
+        agent._worker = mock_worker(rptk_endpoint=agent.rptk_endpoint,
+                                    source_dir=agent.source_dir,
+                                    update_delay=agent.update_delay,
+                                    eapi=agent.eapi_mgr)
         agent.success()
         if stats is not None:
             agent.report.assert_called_once_with(**stats)
@@ -205,10 +181,10 @@ class TestPrefixListAgent(object):
         mock_worker = mocker.patch("prefix_list_agent.agent.PrefixListWorker",
                                    autospec=True)
         mock_worker.return_value.error = worker_err
-        agent._worker = mock_worker(endpoint=agent.rptk_endpoint,
-                                    path=agent.source_dir,
-                                    eapi=agent.eapi_mgr,
-                                    update_delay=agent.update_delay)
+        agent._worker = mock_worker(rptk_endpoint=agent.rptk_endpoint,
+                                    source_dir=agent.source_dir,
+                                    update_delay=agent.update_delay,
+                                    eapi=agent.eapi_mgr)
         if worker_process:
             process = agent.worker
         else:
@@ -267,6 +243,13 @@ class TestPrefixListAgent(object):
                                                  .format(worker.__class__.__name__))  # noqa: E501
         assert 5 <= agent.info.call_count <= 9
 
+    def test_cleanup_noop(self, agent, mocker):
+        """Test case for noop-'cleanup'."""
+        for method in ("err", "notice", "info"):
+            mocker.patch.object(agent, method, autospec=True)
+        agent.cleanup(None)
+        assert agent.info.call_count == 3
+
     def test_sleep(self, agent, mocker):
         """Test case for 'sleep' method."""
         mocker.patch("eossdk.now", autospec=True, return_value=0)
@@ -307,12 +290,6 @@ class TestPrefixListAgent(object):
         agent.on_initialized()
         agent.start.assert_called_once_with()
 
-    def test_on_agent_option(self, agent, mocker):
-        """Test case for 'on_agent_option' method."""
-        mocker.patch.object(agent, "set", autospec=True)
-        agent.on_agent_option("foo", "bar")
-        agent.set.assert_called_once_with("foo", "bar")
-
     @pytest.mark.parametrize("enabled", (True, False))
     def test_on_agent_enabled(self, agent, mocker, enabled):
         """Test case for 'on_agent_enabled' method."""
@@ -338,10 +315,10 @@ class TestPrefixListAgent(object):
         mock_worker.return_value.p_err.fileno.return_value = 2
         for method in ("success", "failure", "warning"):
             mocker.patch.object(agent, method, autospec=True)
-        agent._worker = mock_worker(endpoint=agent.rptk_endpoint,
-                                    path=agent.source_dir,
-                                    eapi=agent.eapi_mgr,
-                                    update_delay=agent.update_delay)
+        agent._worker = mock_worker(rptk_endpoint=agent.rptk_endpoint,
+                                    source_dir=agent.source_dir,
+                                    update_delay=agent.update_delay,
+                                    eapi=agent.eapi_mgr)
         agent.on_readable(fd)
         if fd == 1:
             agent.success.assert_called_once_with()

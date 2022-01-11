@@ -47,14 +47,14 @@ commands:
       prefix-list-agent:
         keyword:
           help: "show prefix-list-agent state"
-  cfg_prefix_list_agent_shutdown:
-    syntax: shutdown
-    noSyntax: shutdown
+  cfg_prefix_list_agent_disabled:
+    syntax: disabled
+    noSyntax: disabled
     mode: prefix_list_agent_mode
     data:
-      shutdown:
+      disabled:
         keyword:
-          help: "Shutdown agent daemon"
+          help: "Disable agent daemon"
   cfg_prefix_list_agent_endpoint:
     syntax: rptk-endpoint <url>
     noSyntax: rptk-endpoint [<url>]
@@ -65,7 +65,7 @@ commands:
           help: "RPTK API endpoint"
       <url>:
         regex:
-          regex: "^https?://[\\w-]+(\\.[\\w-]+)*/?$"
+          regex: "^https?://[\\w-]+(\\.[\\w-]+)*(:\\d+)?/?$"
           help: "RPTK API endpoint URL"
   cfg_prefix_list_agent_source_dir:
     syntax: source-directory <path>

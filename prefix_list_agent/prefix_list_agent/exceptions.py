@@ -16,6 +16,12 @@ import types
 import typing
 
 
+class ConfigValueError(Exception):
+    """Invalid config value."""
+
+    pass
+
+
 class TermException(BaseException):
     """Raised when SIGTERM is handled by handle_sigterm."""
 
