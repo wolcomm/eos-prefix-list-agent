@@ -37,6 +37,12 @@ jobs:
   typecheck:
     needs: [safety]
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        pkg:
+          - "prefix_list_agent"
+          - "prefix_list_agent_cli"
     steps:
       - name: checkout
         uses: actions/checkout@v2
@@ -44,6 +50,7 @@ jobs:
         uses: ./.github/actions/earthly
         with:
           target: typecheck
+          build_args: "PKG=${{ matrix.pkg }}"
           ghcr_token: ${{ secrets.GITHUB_TOKEN }}
           acr_token: ${{ secrets.AZURE_ACR_TOKEN }}
   build:
