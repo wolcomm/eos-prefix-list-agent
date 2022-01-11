@@ -18,6 +18,12 @@ jobs:
   lint:
     needs: [safety]
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        pkg:
+          - "prefix_list_agent"
+          - "prefix_list_agent_cli"
     steps:
       - name: checkout
         uses: actions/checkout@v2
@@ -25,6 +31,7 @@ jobs:
         uses: ./.github/actions/earthly
         with:
           target: lint
+          build_args: "PKG=${{ matrix.pkg }}"
           ghcr_token: ${{ secrets.GITHUB_TOKEN }}
           acr_token: ${{ secrets.AZURE_ACR_TOKEN }}
   typecheck:
@@ -50,7 +57,7 @@ jobs:
       - name: earthly
         uses: ./.github/actions/earthly
         with:
-          target: build
+          target: build-swix
           artifact_path: dist/swix/*.swix
           ghcr_token: ${{ secrets.GITHUB_TOKEN }}
           acr_token: ${{ secrets.AZURE_ACR_TOKEN }}
@@ -69,7 +76,7 @@ jobs:
       - name: download built package
         uses: actions/download-artifact@v2
         with:
-          name: build
+          name: build-swix
       - name: earthly
         uses: ./.github/actions/earthly
         with:
