@@ -43,7 +43,7 @@ safety:
 src:
     ARG --required PKG
     FROM +deps
-    COPY $PKG/ .
+    COPY --dir $PKG/ .
     COPY LICENSE README.md .
 
     LABEL org.opencontainers.image.source=https://github.com/wolcomm/eos-prefix-list-agent
@@ -63,8 +63,8 @@ sdist:
     ARG --required PKG
     BUILD --build-arg PKG=$PKG +src
     FROM --build-arg PKG=$PKG +src
-    COPY --dir .git/ ..
-    RUN python -m pipenv run python -m build --sdist --outdir dist/
+    COPY --dir .git/ .
+    RUN python -m pipenv run python -m build --sdist --outdir dist/ $PKG/
 
     SAVE ARTIFACT dist/*.tar.gz AS LOCAL dist/sdist/
 
