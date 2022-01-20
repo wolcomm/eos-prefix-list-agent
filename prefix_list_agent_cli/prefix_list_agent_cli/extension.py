@@ -11,6 +11,8 @@
 # the License.
 """PrefixListAgent CLI plugin handlers."""
 
+import sys
+
 from typing import Any, Dict, Optional, Text
 
 import CliExtension
@@ -36,7 +38,19 @@ class ShowPrefixListAgent(CliExtension.ShowCommandClass):  # type: ignore[misc]
     def render(self, data):
         # type: (Dict[Text, Any]) -> None
         """Render `show prefix-list-agent` command output."""
-        print(data)
+        sys.stdout.write("Prefix list agent: ")
+        if data["enabled"]:
+            sys.stdout.write("Running\n")
+            sys.stdout.write("\nConfiguration\n")
+            sys.stdout.write("----\n")
+            for key, value in data["config"].items():
+                sys.stdout.write("{:10}: {}\n".format(key, value))
+            sys.stdout.write("\nStatus\n")
+            sys.stdout.write("----\n")
+            for key, value in data["status"].items():
+                sys.stdout.write("{:10}: {}\n".format(key, value))
+        else:
+            sys.stdout.write("Not running\n")
 
 
 class PrefixListAgentCfgDisabled(CliExtension.CliCommandClass):  # type: ignore[misc]  # noqa: E501

@@ -83,3 +83,12 @@ class TestPrefixListAgentDaemon(object):
         assert status[NAME]["data"]["result"] == "ok"
         assert int(status[NAME]["data"]["failed"]) == 0
         assert int(status[NAME]["data"]["succeeded"]) == 4
+
+    def test_show_cli(self, node):
+        """Test 'show prefix-list-agent' command."""
+        response = node.enable("show prefix-list-agent")
+        data = response[0]["result"]
+        assert data["enabled"] is True
+        assert data["status"]["result"] == "ok"
+        assert int(data["status"]["succeeded"]) == 4
+        assert int(data["status"]["failed"]) == 0
