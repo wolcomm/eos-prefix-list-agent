@@ -45,6 +45,7 @@ src:
     FROM +deps
     COPY --dir $PKG/ .
     COPY LICENSE README.md .
+    WORKDIR $PKG
 
 lint:
     ARG --required PKG
@@ -59,8 +60,8 @@ typecheck:
 sdist:
     ARG --required PKG
     FROM --build-arg PKG=$PKG +src
-    COPY --dir .git/ .
-    RUN python -m pipenv run python -m build --sdist --outdir dist/ $PKG/
+    COPY --dir .git/ ..
+    RUN python -m pipenv run python -m build --sdist --outdir dist/
 
     SAVE ARTIFACT dist/*.tar.gz AS LOCAL dist/sdist/
 
