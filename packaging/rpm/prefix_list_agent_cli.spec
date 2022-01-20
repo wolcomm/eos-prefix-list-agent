@@ -54,8 +54,8 @@ ln -s %{python2_sitelib}/prefix_list_agent_cli/extension.py %{buildroot}%{python
 
 
 %files -n eos-prefix-list-agent-cli
-%doc README.*
-%license LICENSE*
+%doc README.md
+%license LICENSE
 %{python2_sitelib}/eos_prefix_list_agent_cli-%{version}.dist-info/
 %{python2_sitelib}/prefix_list_agent_cli/
 %{python2_sitelib}/CliPlugin/PrefixListAgent.py

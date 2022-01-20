@@ -51,8 +51,8 @@ update the prefix-lists without calling the EOS config parser.
 
 
 %files -n eos-prefix-list-agent -f %{pyproject_files}
-%doc README.*
-%license LICENSE*
+%doc README.md
+%license LICENSE
 %{_bindir}/PrefixListAgent
 
 
