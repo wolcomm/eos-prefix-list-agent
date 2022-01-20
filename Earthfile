@@ -46,9 +46,6 @@ src:
     COPY --dir $PKG/ .
     COPY LICENSE README.md .
 
-    LABEL org.opencontainers.image.source=https://github.com/wolcomm/eos-prefix-list-agent
-    SAVE IMAGE --push ghcr.io/wolcomm/eos-prefix-list-agent/ci-src:$PKG
-
 lint:
     ARG --required PKG
     FROM --build-arg PKG=$PKG +src
@@ -61,7 +58,6 @@ typecheck:
 
 sdist:
     ARG --required PKG
-    BUILD --build-arg PKG=$PKG +src
     FROM --build-arg PKG=$PKG +src
     COPY --dir .git/ .
     RUN python -m pipenv run python -m build --sdist --outdir dist/ $PKG/
