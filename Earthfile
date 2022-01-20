@@ -61,6 +61,7 @@ typecheck:
 
 sdist:
     ARG --required PKG
+    BUILD --build-arg PKG=$PKG +src
     FROM --build-arg PKG=$PKG +src
     COPY --dir .git/ ..
     RUN python -m pipenv run python -m build --sdist --outdir dist/
@@ -119,9 +120,12 @@ build-swix:
 
     RUN mkdir -p dist rpms
 
+    FOR PKG IN "prefix_list_agent" "prefix_list_agent_cli"
+        BUILD --build-arg PKG=$PKG +build-rpm
+        COPY --build-arg PKG=$PKG +build-rpm/*.rpm rpms/
+    END
+
     COPY --build-arg PKG="prefix_list_agent" +build-rpm/VERSION ./
-    COPY --build-arg PKG="prefix_list_agent" +build-rpm/*.rpm rpms/
-    COPY --build-arg PKG="prefix_list_agent_cli" +build-rpm/*.rpm rpms/
 
     COPY packaging/swix/manifest.yaml .
     RUN SWIX="dist/eos-prefix-list-agent-$(cat VERSION).swix" && \
