@@ -10,24 +10,6 @@ build-backend = "setuptools.build_meta"
 root = ".."
 local_scheme = "no-local-version"
 
-[tool.pytest.ini_options]
-addopts = "-vs --strict-markers --cov --cov-report=term-missing --cov-report=xml --cov-branch"
-xfail_strict = true
-
-[tool.coverage.run]
-include = [
-    "*/prefix_list_agent/*",
-]
-
-[tool.coverage.report]
-exclude_lines = [
-    "pragma: no cover",
-    ".def __repr__.",
-    "if __name__ == .__main__.:",
-    "if typing.TYPE_CHECKING:",
-    "raise NotImplementedError",
-]
-
 [tool.mypy]
 pretty = true
 strict = true
