@@ -12,7 +12,6 @@
 """PrefixListAgent CLI plugin handlers."""
 
 import sys
-
 from typing import Any, Dict, Optional, Text
 
 import CliExtension
