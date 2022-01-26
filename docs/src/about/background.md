@@ -47,9 +47,9 @@ whole configurations are generated and deployed as a single unit:
     configuration slows down the whole deployment pipeline, and makes unrelated
     configuration changes unnecessarily burdensome.
 -   **Timing dependence**: Prefix filters and other configuration elements must
-    generated and deployed together. Most device configuration ought to change
-    on an irregular schedule, according to the changing intentions of the
-    operator. Prefix filters, conversely, are generally updated on a fixed
+    be generated and deployed together. Most device configuration ought to
+    change on an irregular schedule, according to the changing intentions of
+    the operator. Prefix filters, conversely, are generally updated on a fixed
     regular schedule. Coupling these schedules together increases configuration
     churn and scope for failures.
 -   **Rollback dependence**: If an operator wishes to roll back to a previous
@@ -58,7 +58,7 @@ whole configurations are generated and deployed as a single unit:
 
 ## Policy-plane separation
 
-Network devices are typically conceive of has having three inter-dependent
+Network devices are typically conceived of has having three inter-dependent
 "planes", each concerned with a function of the device:
 
 -   The *management plane* provides the means for device management functions
