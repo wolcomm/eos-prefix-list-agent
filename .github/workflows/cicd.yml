@@ -101,7 +101,7 @@ jobs:
         with:
           files: coverage.xml
           env_vars: CEOS_VERSION
-  docs:
+  build-docs:
     needs: [safety]
     runs-on: ubuntu-latest
     steps:
@@ -114,61 +114,45 @@ jobs:
           artifact_path: dist/book
           ghcr_token: ${{ secrets.GITHUB_TOKEN }}
           acr_token: ${{ secrets.AZURE_ACR_TOKEN }}
-  # publish-docs:
-  #   if: ${{ github.event_name == 'push' }}
-  #   needs:
-  #     - build-docs
-  #     - lint
-  #     - typecheck
-  #     - test
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: checkout
-  #       uses: actions/checkout@v2
-  #     - name: download built docs artifact
-  #       uses: actions/download-artifact@v2
-  #       with:
-  #         name: docs
-  #         path: build/docs/html/
-  #     - name: deploy to github-pages
-  #       uses: JamesIves/github-pages-deploy-action@4.1.1
-  #       with:
-  #         branch: gh-pages
-  #         folder: build/docs/html
-  #         clean-exclude: /index.html
-  # publish-dist:
-  #   if: ${{ github.event_name == 'push' }}
-  #   needs:
-  #     - build-dist
-  #     - lint
-  #     - typecheck
-  #     - test
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: setup python ${{ env.DEFAULT_PYTHON }}
-  #       uses: actions/setup-python@v2
-  #       with:
-  #         python-version: ${{ env.DEFAULT_PYTHON }}
-  #     - name: download sdist artifact
-  #       uses: actions/download-artifact@v2
-  #       with:
-  #         name: sdist
-  #         path: dist/
-  #     - name: download wheel artifact
-  #       uses: actions/download-artifact@v2
-  #       with:
-  #         name: wheel
-  #         path: dist/
-  #     - name: publish built artifacts to test.pypi.org
-  #       uses: pypa/gh-action-pypi-publish@release/v1
-  #       with:
-  #         user: __token__
-  #         password: ${{ secrets.TEST_PYPI_API_TOKEN }}
-  #         repository_url: https://test.pypi.org/legacy/
-  #         skip_existing: true
-  #     - name: publish built artifacts to pypi.org
-  #       if: ${{ startsWith(github.ref, 'refs/tag') }}
-  #       uses: pypa/gh-action-pypi-publish@release/v1
-  #       with:
-  #         user: __token__
-  #         password: ${{ secrets.PYPI_API_TOKEN }}
+  publish-docs:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tag')
+    needs:
+      - lint
+      - typecheck
+      - test
+      - build-docs
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: download built docs artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: docs
+          path: dist/book
+      - name: deploy to github-pages
+        uses: JamesIves/github-pages-deploy-action@4.2.2
+        with:
+          branch: gh-pages
+          folder: dist/book
+  publish-release:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tag')
+    needs:
+      - lint
+      - typecheck
+      - test
+      - build-docs
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: download built package
+        uses: actions/download-artifact@v2
+        with:
+          name: build-swix
+      - name: publish release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: "./*.swix"
+          draft: false
+          fail_on_unmatched_files: true
