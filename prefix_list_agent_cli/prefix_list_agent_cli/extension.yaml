@@ -88,7 +88,7 @@ commands:
       <int>:
         integer:
           min: 10
-          max: 86399
+          max: 86400
           help: "interval (seconds)"
   cfg_prefix_list_agent_delay:
     syntax: update-delay <int>
