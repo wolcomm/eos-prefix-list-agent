@@ -13,6 +13,7 @@ all:
     BUILD +build-swix
     BUILD --build-arg CEOS_VERSION="4.26.3M" +test
     BUILD --build-arg CEOS_VERSION="4.27.0F" +test
+    BUILD +docs
 
 deps:
     RUN apt update -qq && \
