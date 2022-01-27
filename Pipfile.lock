@@ -270,10 +270,10 @@
         },
         "mando": {
             "hashes": [
-                "sha256:4ce09faec7e5192ffc3c57830e26acba0fd6cd11e1ee81af0d4df0657463bd1c",
-                "sha256:79feb19dc0f097daa64a1243db578e7674909b75f88ac2220f1c065c10a0d960"
+                "sha256:5306a91109096fe2e204a1f5ae141038842193f7210a7930c8ee73ccb7ecbf62",
+                "sha256:58069aa9b00f99ca3ac89b012f1cefb20896134b18e850e221362745d96f70db"
             ],
-            "version": "==0.6.4"
+            "version": "==0.7.0"
         },
         "markupsafe": {
             "hashes": [
