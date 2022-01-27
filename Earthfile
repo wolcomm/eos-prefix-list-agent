@@ -45,8 +45,7 @@ safety:
 src:
     ARG --required PKG
     FROM +deps
-    COPY --dir $PKG/ .
-    COPY LICENSE README.md .
+    COPY . .
     WORKDIR $PKG
 
 lint:
