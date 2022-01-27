@@ -6,6 +6,6 @@ coverage:
     project:
       default:
         target: auto
-        threshold: 0%
+        threshold: 1%
 comment:
   behavior: new
