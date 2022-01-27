@@ -11,8 +11,9 @@ all:
         BUILD --build-arg PKG=$PKG +build-rpm
     END
     BUILD +build-swix
-    BUILD --build-arg CEOS_VERSION="4.26.3M" +test
-    BUILD --build-arg CEOS_VERSION="4.27.0F" +test
+    FOR VERSION IN "4.26.3M" "4.27.0F"
+        BUILD --build-arg CEOS_VERSION=$VERSION +test
+    END
     BUILD +docs
 
 deps:
