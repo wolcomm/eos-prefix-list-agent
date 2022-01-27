@@ -9,19 +9,27 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations under
 # the License.
-"""Tests for prefix_list_agent.exceptions module."""
+"""prefix_list_agent Package."""
 
-import signal
+import logging
+import sys
 
-from prefix_list_agent.exceptions import TermException, handle_sigterm
+import eossdk
 
-import pytest
+from .agent import PrefixListAgent
+
+logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
-class TestExceptions(object):
-    """Test cases for exceptions module."""
-
-    def test_term(self):
-        """Test case for SIGTERM signal handler."""
-        with pytest.raises(TermException):
-            handle_sigterm(signal.SIGTERM, None)
+def start(sdk: eossdk.Sdk) -> int:
+    """Start the agent."""
+    try:
+        # create an instance of the agent
+        _ = PrefixListAgent(sdk)
+        # enter the sdk event-loop
+        sdk.main_loop(sys.argv)
+    except KeyboardInterrupt:
+        return 130
+    except Exception:
+        raise
+    return 0

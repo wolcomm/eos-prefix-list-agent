@@ -1,0 +1,8 @@
+update: all
+pin: True
+assignees:
+  - benmaddison
+label_prs: dependencies
+requirements:
+  - Pipfile
+  - Pipfile.lock

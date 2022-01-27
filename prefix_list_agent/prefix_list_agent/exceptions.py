@@ -9,19 +9,26 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations under
 # the License.
-"""Tests for prefix_list_agent.exceptions module."""
+"""prefix_list_agent custom execptions."""
 
 import signal
-
-from prefix_list_agent.exceptions import TermException, handle_sigterm
-
-import pytest
+import types
+import typing
 
 
-class TestExceptions(object):
-    """Test cases for exceptions module."""
+class ConfigValueError(Exception):
+    """Invalid config value."""
 
-    def test_term(self):
-        """Test case for SIGTERM signal handler."""
-        with pytest.raises(TermException):
-            handle_sigterm(signal.SIGTERM, None)
+    pass
+
+
+class TermException(BaseException):
+    """Raised when SIGTERM is handled by handle_sigterm."""
+
+    pass
+
+
+def handle_sigterm(signum: signal.Signals,
+                   frame: typing.Optional[types.FrameType]) -> None:
+    """Handle a SIGTERM signal by raising custom exception."""
+    raise TermException

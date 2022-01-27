@@ -11,8 +11,6 @@
 # the License.
 """Fixtures for PrefixListAgent integration tests."""
 
-from __future__ import print_function
-
 import time
 
 import pytest
@@ -23,7 +21,8 @@ from rptk_stub import RptkStubProcess
 @pytest.fixture(scope="module")
 def node():
     """Provide a pyeapi node connected to the local unix socket."""
-    for retry in range(60):
+    err = None
+    for _ in range(60):
         try:
             import pyeapi
             conn = pyeapi.connect(transport="socket")
@@ -31,10 +30,11 @@ def node():
             assert node.version
             break
         except Exception as e:
+            err = e
             time.sleep(3)
             continue
     else:
-        raise e
+        raise err
     return node
 
 
@@ -42,13 +42,12 @@ def node():
 def configure_daemon(node):
     """Configure the agent as an EOS ProcMgr daemon."""
     agent_config = [
-        "trace PrefixListAgent-PrefixListAgent setting PrefixList*/*",
-        "daemon PrefixListAgent",
-        "exec /root/bin/PrefixListAgent",
-        "option rptk_endpoint value http://127.0.0.1:8000/",
-        "option refresh_interval value 10",
-        "option update_delay value 1",
-        "no shutdown"
+        "trace PrefixListAgent setting PrefixList*/*",
+        "prefix-list-agent",
+        "rptk-endpoint http://127.0.0.1:8000/",
+        "refresh-interval 10",
+        "update-delay 1",
+        "no disabled",
     ]
     node.config(agent_config)
     time.sleep(3)

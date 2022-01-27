@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # Copyright (c) 2019 Workonline Communications (Pty) Ltd. All rights reserved.
 #
 # The contents of this file are licensed under the MIT License
@@ -9,19 +10,26 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations under
 # the License.
-"""Tests for prefix_list_agent.exceptions module."""
+"""PrefixListAgent EOS SDK Agent."""
 
-import signal
+import sys
 
-from prefix_list_agent.exceptions import TermException, handle_sigterm
+import eossdk
 
-import pytest
+from prefix_list_agent import start
 
 
-class TestExceptions(object):
-    """Test cases for exceptions module."""
+def main():
+    """Run the PrefixListAgent."""
+    try:
+        # get an instance of the EOS SDK
+        sdk = eossdk.Sdk()
+    except Exception:
+        # return a generic error status on failure
+        return 1
+    # start the agent
+    return start(sdk)
 
-    def test_term(self):
-        """Test case for SIGTERM signal handler."""
-        with pytest.raises(TermException):
-            handle_sigterm(signal.SIGTERM, None)
+
+if __name__ == "__main__":
+    sys.exit(main())

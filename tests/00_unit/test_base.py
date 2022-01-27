@@ -11,17 +11,15 @@
 # the License.
 """Tests for prefix_list_agent.agent module."""
 
-from __future__ import print_function
+from prefix_list_agent.base import PrefixListBase
 
 import pytest
 
-from prefix_list_agent.base import PrefixListBase
 
-
-class TestPrefixListAgent(object):
+class TestPrefixListBase(object):
     """Test cases for PrefixListBase object."""
 
-    def test_init(self, sdk, mocker):
+    def test_init(self, mocker):
         """Test case for PrefixListAgent initialisation."""
         mocker.patch("eossdk.Tracer", autospec=True)
         base = PrefixListBase()

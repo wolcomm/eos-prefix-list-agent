@@ -1,0 +1,161 @@
+name: "CI/CD"
+on:
+  - push
+  - pull_request
+jobs:
+  safety:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: earthly
+        uses: ./.github/actions/earthly
+        with:
+          target: safety
+          secrets: "SAFETY_API_KEY=${{ secrets.SAFETY_API_KEY }}"
+          push: ${{ github.ref == 'refs/heads/master' }}
+          ghcr_token: ${{ secrets.GITHUB_TOKEN }}
+          acr_token: ${{ secrets.AZURE_ACR_TOKEN }}
+  lint:
+    needs: [safety]
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        pkg:
+          - "prefix_list_agent"
+          - "prefix_list_agent_cli"
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: earthly
+        uses: ./.github/actions/earthly
+        with:
+          target: lint
+          build_args: "PKG=${{ matrix.pkg }}"
+          ghcr_token: ${{ secrets.GITHUB_TOKEN }}
+          acr_token: ${{ secrets.AZURE_ACR_TOKEN }}
+  typecheck:
+    needs: [safety]
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        pkg:
+          - "prefix_list_agent"
+          - "prefix_list_agent_cli"
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: earthly
+        uses: ./.github/actions/earthly
+        with:
+          target: typecheck
+          build_args: "PKG=${{ matrix.pkg }}"
+          ghcr_token: ${{ secrets.GITHUB_TOKEN }}
+          acr_token: ${{ secrets.AZURE_ACR_TOKEN }}
+  build:
+    needs: [safety]
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: earthly
+        uses: ./.github/actions/earthly
+        with:
+          target: build-swix
+          artifact_path: dist/swix/*.swix
+          push: ${{ github.ref == 'refs/heads/master' }}
+          ghcr_token: ${{ secrets.GITHUB_TOKEN }}
+          acr_token: ${{ secrets.AZURE_ACR_TOKEN }}
+  test:
+    needs: [build]
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        ceos_version:
+          - "4.26.3M"
+          - "4.27.0F"
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: download built package
+        uses: actions/download-artifact@v2
+        with:
+          name: build-swix
+      - name: earthly
+        uses: ./.github/actions/earthly
+        with:
+          target: test
+          build_args: "CEOS_VERSION=${{ matrix.ceos_version }},LOCAL_PACKAGE=./*.swix"
+          artifact_name: coverage-ceos-${{ matrix.ceos_version }}
+          artifact_path: coverage.xml
+          allow_privileged: true
+          push: ${{ github.ref == 'refs/heads/master' }}
+          ghcr_token: ${{ secrets.GITHUB_TOKEN }}
+          acr_token: ${{ secrets.AZURE_ACR_TOKEN }}
+      - name: upload coverage report
+        uses: codecov/codecov-action@v2
+        env:
+          CEOS_VERSION: ${{ matrix.ceos_version }}
+        with:
+          files: coverage.xml
+          env_vars: CEOS_VERSION
+  build-docs:
+    needs: [safety]
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: earthly
+        uses: ./.github/actions/earthly
+        with:
+          target: docs
+          artifact_path: dist/book
+          ghcr_token: ${{ secrets.GITHUB_TOKEN }}
+          acr_token: ${{ secrets.AZURE_ACR_TOKEN }}
+  publish-docs:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tag')
+    needs:
+      - lint
+      - typecheck
+      - test
+      - build-docs
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: download built docs artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: docs
+          path: dist/book
+      - name: deploy to github-pages
+        uses: JamesIves/github-pages-deploy-action@4.2.2
+        with:
+          branch: gh-pages
+          folder: dist/book
+  publish-release:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tag')
+    needs:
+      - lint
+      - typecheck
+      - test
+      - build-docs
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: download built package
+        uses: actions/download-artifact@v2
+        with:
+          name: build-swix
+      - name: publish release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: "./*.swix"
+          draft: false
+          fail_on_unmatched_files: true

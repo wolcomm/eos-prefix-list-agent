@@ -11,8 +11,6 @@
 # the License.
 """Fixtures for PrefixListAgent integration tests."""
 
-from __future__ import print_function
-
 import json
 import multiprocessing
 import sys
@@ -31,20 +29,20 @@ class RptkStub(gunicorn.app.base.BaseApplication):
     objects = {
         "AS-FOO": {
             "ipv4": [
-                {"prefix": "192.0.2.0/24", "exact": True}
+                {"prefix": "192.0.2.0/24", "exact": True},
             ],
             "ipv6": [
                 {"prefix": "2001:db8::/32", "exact": False,
-                 "greater-equal": 40, "less-equal": 48}
-            ]
+                 "greater-equal": 40, "less-equal": 48},
+            ],
         },
         "AS-BAR": {
             "ipv4": [
                 {"prefix": "198.51.100.0/24", "exact": True},
-                {"prefix": "203.0.113.0/24", "exact": True}
+                {"prefix": "203.0.113.0/24", "exact": True},
             ],
-            "ipv6": []
-        }
+            "ipv6": [],
+        },
     }
 
     def __init__(self, **kwargs):

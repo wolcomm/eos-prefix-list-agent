@@ -1,0 +1,17 @@
+[book]
+title = "EOS Prefix List Agent"
+authors = ["Ben Maddison"]
+language = "en"
+multilingual = false
+src = "src"
+
+[build]
+create-missing = false
+
+[output.html]
+git-repository-url = "https://github.com/wolcomm/eos-prefix-list-agent"
+edit-url-template = "https://github.com/wolcomm/eos-prefix-list-agent/edit/master/{path}"
+
+[output.html.print]
+enable = false
+

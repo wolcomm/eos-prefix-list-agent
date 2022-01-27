@@ -1,0 +1,28 @@
+# Markdown linting rules
+
+# Use defaults
+default: true
+
+# Heading style
+MD003:
+  style: "atx"
+
+# Un-ordered list style
+MD004:
+  style: "dash"
+
+# Number of spaces to indent nested lists
+MD007:
+  indent: 4
+
+# Number of spaces following marker in lists
+MD030:
+  ul_multi: 3
+  ol_multi: 2
+
+# Disallow in-line html
+MD033: true
+
+# Horizontal rule style
+MD035:
+  style: "---"
