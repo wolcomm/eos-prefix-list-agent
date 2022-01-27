@@ -15,7 +15,7 @@ inputs:
   push:
     description: "allow earthly push actions"
     required: false
-    default: "true"
+    default: "false"
   allow_privileged:
     description: "allow earthly to run privileged containers"
     required: false

@@ -13,6 +13,7 @@ jobs:
         with:
           target: safety
           secrets: "SAFETY_API_KEY=${{ secrets.SAFETY_API_KEY }}"
+          push: ${{ github.ref == 'refs/heads/master' }}
           ghcr_token: ${{ secrets.GITHUB_TOKEN }}
           acr_token: ${{ secrets.AZURE_ACR_TOKEN }}
   lint:
@@ -66,6 +67,7 @@ jobs:
         with:
           target: build-swix
           artifact_path: dist/swix/*.swix
+          push: ${{ github.ref == 'refs/heads/master' }}
           ghcr_token: ${{ secrets.GITHUB_TOKEN }}
           acr_token: ${{ secrets.AZURE_ACR_TOKEN }}
   test:
@@ -92,6 +94,7 @@ jobs:
           artifact_name: coverage-ceos-${{ matrix.ceos_version }}
           artifact_path: coverage.xml
           allow_privileged: true
+          push: ${{ github.ref == 'refs/heads/master' }}
           ghcr_token: ${{ secrets.GITHUB_TOKEN }}
           acr_token: ${{ secrets.AZURE_ACR_TOKEN }}
       - name: upload coverage report
