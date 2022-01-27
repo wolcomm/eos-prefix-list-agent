@@ -5,7 +5,7 @@
 Name:           eos-prefix-list-agent
 Version:        %{_version}
 Release:        0%{?dist}
-Summary:        Foo
+Summary:        EOS Prefix List Agent base package
 
 License:        MIT
 URL:            https://github.com/wolcomm/eos-prefix-list-agent
@@ -19,10 +19,7 @@ BuildRequires:  pyproject-rpm-macros
 An EOS SDK based agent that maintains up-to-date prefix-list policy objects for
 use in EOS routing policy configurations, based on data in the IRR.
 
-The agent will periodically check the running configuration of the device to
-gather a list of prefix-lists that it is responsible for maintaining. It will
-then retrieve the required data from the IRR via an RPTK web service, and
-update the prefix-lists without calling the EOS config parser.
+This package provides the base agent implementation.
 }
 
 %description %_description
