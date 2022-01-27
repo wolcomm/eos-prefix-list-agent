@@ -11,7 +11,6 @@
 # the License.
 """prefix_list_agent custom execptions."""
 
-import signal
 import types
 import typing
 
@@ -28,7 +27,7 @@ class TermException(BaseException):
     pass
 
 
-def handle_sigterm(signum: signal.Signals,
+def handle_sigterm(signum: int,
                    frame: typing.Optional[types.FrameType]) -> None:
     """Handle a SIGTERM signal by raising custom exception."""
     raise TermException
