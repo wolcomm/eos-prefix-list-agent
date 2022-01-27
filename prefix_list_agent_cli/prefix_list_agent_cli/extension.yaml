@@ -1,4 +1,4 @@
-# Copyright (c) 2019 Workonline Communications (Pty) Ltd. All rights reserved.
+# Copyright (c) 2022 Workonline Communications (Pty) Ltd. All rights reserved.
 #
 # The contents of this file are licensed under the MIT License
 # (the "License"); you may not use this file except in compliance with the
