@@ -4,6 +4,7 @@
 
 [![CI/CD](https://github.com/wolcomm/eos-prefix-list-agent/actions/workflows/cicd.yml/badge.svg?event=push)](https://github.com/wolcomm/eos-prefix-list-agent/actions/workflows/cicd.yml)
 [![codecov](https://codecov.io/gh/wolcomm/eos-prefix-list-agent/branch/master/graph/badge.svg)](https://codecov.io/gh/wolcomm/eos-prefix-list-agent)
+[![Updates](https://pyup.io/repos/github/wolcomm/eos-prefix-list-agent/shield.svg)](https://pyup.io/repos/github/wolcomm/eos-prefix-list-agent/)
 
 ## Overview
 
