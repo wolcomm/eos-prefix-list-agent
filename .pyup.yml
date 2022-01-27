@@ -3,6 +3,7 @@ pin: True
 assignees:
   - benmaddison
 label_prs: dependencies
+branch_prefix: pyup/
 requirements:
-  - Pipfile
-  - Pipfile.lock
+  - Pipfile:
+      pin: True
