@@ -1,0 +1,269 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Background - EOS Prefix List Agent</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../about/index.html"><strong aria-hidden="true">1.</strong> About</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../about/background.html" class="active"><strong aria-hidden="true">1.1.</strong> Background</a></li><li class="chapter-item expanded "><a href="../about/implementation.html"><strong aria-hidden="true">1.2.</strong> Implementation</a></li></ol></li><li class="chapter-item expanded "><a href="../install/index.html"><strong aria-hidden="true">2.</strong> Installation</a></li><li class="chapter-item expanded "><a href="../config/index.html"><strong aria-hidden="true">3.</strong> Configuration</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../config/agent.html"><strong aria-hidden="true">3.1.</strong> Agent</a></li><li class="chapter-item expanded "><a href="../config/prefix-lists.html"><strong aria-hidden="true">3.2.</strong> Prefix lists</a></li><li class="chapter-item expanded "><a href="../config/tracing.html"><strong aria-hidden="true">3.3.</strong> Tracing</a></li></ol></li><li class="chapter-item expanded "><a href="../ops/index.html"><strong aria-hidden="true">4.</strong> Operations</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">EOS Prefix List Agent</h1>
+
+                    <div class="right-buttons">
+                        <a href="https://github.com/wolcomm/eos-prefix-list-agent" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        <a href="https://github.com/wolcomm/eos-prefix-list-agent/edit/master/src/about/background.md" title="Suggest an edit" aria-label="Suggest an edit">
+                            <i id="git-edit-button" class="fa fa-edit"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="background"><a class="header" href="#background">Background</a></h1>
+<p>Internet operators maintain BGP filters at the borders of their networks to
+control the propagation of routing information between autonomous systems (ASs).</p>
+<p>Such filters are essential to prevent policy violations and outages that occur
+when configuration mistakes or intentional hijacks happen.</p>
+<p>Unfortunately, construction of correct filters requires special knowledge of
+the routing intentions of other operators, with whom there may exist no
+operational relationship. Furthermore, the burden of providing and consuming
+the necessary data, at Internet scale, without automated processes is
+impractical.</p>
+<p>The <a href="http://www.irr.net/">Internet Routing Registry (IRR)</a> system is a distributed and loosely
+co-ordinated set of databases in which operators publish data about their
+routing intentions, which can then be used to construct filter configurations
+by others.</p>
+<p>The most common way in which IRR data is used for constructing filters is to
+make a &quot;prefix set&quot; representing the prefixes originated in BGP by a
+neighboring AS and their customer ASs.</p>
+<h2 id="off-line-filter-generation"><a class="header" href="#off-line-filter-generation">Off-line filter generation</a></h2>
+<p>In <a href="http://www.irr.net/docs/rpsl.html">RPSL</a>, the language of the IRR, a set of ASs is represented by an <code>as-set</code>
+object, and a BGP route by <code>route</code> (IPv4) or <code>route6</code> (IPv6) objects.</p>
+<p>To construct a set of prefixes from an <code>as-set</code>, one first queries an IRR
+database mirror for the ASNs that are members of the set, and then, for each
+member, performs further queries for the <code>route</code> and <code>route6</code> objects that have
+an <code>origin:</code> attribute equal to that ASN.</p>
+<p>Several open source tools are available to perform this procedure, some of
+which are capable of outputting the resulting set directly in the configuration
+language of a specific router vendor.</p>
+<p>Most commonly this process is performed periodically, and the results are
+either deployed directly to the target device, or integrated along with other
+configuration snippets into a configuration generation and deployment pipeline.</p>
+<p>This methodology has several drawbacks, particularly in an environment where
+whole configurations are generated and deployed as a single unit:</p>
+<ul>
+<li><strong>Configuration size</strong>: Prefix filters can easily grow to hundreds of
+thousands of entries. Generating and deploying filters as part of a device
+configuration slows down the whole deployment pipeline, and makes unrelated
+configuration changes unnecessarily burdensome.</li>
+<li><strong>Timing dependence</strong>: Prefix filters and other configuration elements must
+be generated and deployed together. Most device configuration ought to
+change on an irregular schedule, according to the changing intentions of
+the operator. Prefix filters, conversely, are generally updated on a fixed
+regular schedule. Coupling these schedules together increases configuration
+churn and scope for failures.</li>
+<li><strong>Rollback dependence</strong>: If an operator wishes to roll back to a previous
+configuration, this will also roll back the <em>contents</em> of any prefix
+filters. This is unlikely to be desirable in general.</li>
+</ul>
+<h2 id="policy-plane-separation"><a class="header" href="#policy-plane-separation">Policy-plane separation</a></h2>
+<p>Network devices are typically conceived of has having three inter-dependent
+&quot;planes&quot;, each concerned with a function of the device:</p>
+<ul>
+<li>The <em>management plane</em> provides the means for device management functions
+such login and authentication, configuration database management, and
+statistics collection.</li>
+<li>The <em>control plane</em> provides a host networking stack, on which routing
+protocols and other network services run.</li>
+<li>The <em>data plane</em> provides the packet forwarding functions for network
+traffic traversing the device.</li>
+</ul>
+<p>Addressing the above shortcomings of prefix filter maintenance requires a
+decoupling of the <em>presence</em> of a filter from its <em>contents</em>.</p>
+<p>Whether a filter for a particular neighbor AS should be present, how and when
+it should be updated, and how it should be referenced in other policy
+constructs are all concerns of the local device operator, and belong in the
+device configuration, i.e. the <em>management plane</em>.</p>
+<p>The <em>contents</em> of a particular IRR-based prefix filter, however, is not
+(primarily) determined by the intentions of the local operator, but by the data
+that has been published in a remote database by some third party.</p>
+<p>This data is a natural part of neither the management nor control planes. Its
+existence is determined by the former, and its contents impacts the operation
+of the later. However it is best managed independently of either, on a separate
+logical <em>&quot;policy plane&quot;</em>.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../about/index.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next" href="../about/implementation.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../about/index.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next" href="../about/implementation.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../searcher.js" type="text/javascript" charset="utf-8"></script>
+
+        <script src="../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </body>
+</html>
