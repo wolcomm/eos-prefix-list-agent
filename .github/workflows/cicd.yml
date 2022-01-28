@@ -125,6 +125,8 @@ jobs:
       - test
       - build-docs
     runs-on: ubuntu-latest
+    outputs:
+      prerelease: ${{ steps.release-type.outputs.prerelease }}
     steps:
       - name: set release type
         id: release-type
