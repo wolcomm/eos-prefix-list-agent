@@ -137,7 +137,7 @@ jobs:
   publish-docs:
     needs:
       - release-type
-    if: ! needs.release-type.outputs.prerelease
+    if: ${{ ! needs.release-type.outputs.prerelease }}
     runs-on: ubuntu-latest
     steps:
       - name: checkout
