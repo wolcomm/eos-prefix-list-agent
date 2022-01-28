@@ -167,15 +167,11 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: build-swix
-      - name: debug prerelease
-        run: |
-          echo "::debug::prerelease: ${{ needs.release-type.outputs.prerelease }}"
-          echo "::debug::prerelease == true: ${{ needs.release-type.outputs.prerelease == 'true' }}"
       - name: publish release
         uses: softprops/action-gh-release@v1
         with:
           files: "./*.swix"
           draft: true
-          prerelease: ${{ needs.release-type.ouputs.prerelease == 'true' }}
+          prerelease: ${{ needs.release-type.outputs.prerelease == 'true' }}
           fail_on_unmatched_files: true
           generate_release_notes: true
