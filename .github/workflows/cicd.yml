@@ -139,7 +139,7 @@ jobs:
   publish-docs:
     needs:
       - release-type
-    if: ${{ ! needs.release-type.outputs.prerelease }}
+    if: needs.release-type.outputs.prerelease == 'false'
     runs-on: ubuntu-latest
     steps:
       - name: checkout
@@ -170,6 +170,6 @@ jobs:
         with:
           files: "./*.swix"
           draft: true
-          prerelease: ${{ needs.release-type.ouputs.prerelease }}
+          prerelease: ${{ needs.release-type.ouputs.prerelease == 'true' }}
           fail_on_unmatched_files: true
           generate_release_notes: true
