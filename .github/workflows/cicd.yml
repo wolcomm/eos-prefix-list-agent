@@ -131,11 +131,13 @@ jobs:
       - name: set release type
         id: release-type
         run: |
+          echo "::echo::on"
           if [[ "${{ github.ref_name }}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo ::set-output name=prerelease::false
+            echo "::set-output name=prerelease::false"
           else
-            echo ::set-output name=prerelease::true
+            echo "::set-output name=prerelease::true"
           fi
+          echo "::echo::off"
   publish-docs:
     needs:
       - release-type
@@ -165,6 +167,10 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: build-swix
+      - name: debug prerelease
+        run: |
+          echo "::debug::prerelease: ${{ needs.release-type.outputs.prerelease }}"
+          echo "::debug::prerelease == true: ${{ needs.release-type.outputs.prerelease == 'true' }}"
       - name: publish release
         uses: softprops/action-gh-release@v1
         with:
