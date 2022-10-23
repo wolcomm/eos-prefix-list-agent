@@ -76,8 +76,7 @@ jobs:
       fail-fast: false
       matrix:
         ceos_version:
-          - "4.26.3M"
-          - "4.27.0F"
+          - "4.28.2F"
     steps:
       - name: checkout
         uses: actions/checkout@v2

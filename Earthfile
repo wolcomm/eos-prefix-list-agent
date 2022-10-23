@@ -1,6 +1,6 @@
 VERSION 0.6
 
-FROM python:3.7-slim
+FROM python:3.9-slim
 WORKDIR "/root/"
 
 all:
@@ -11,7 +11,7 @@ all:
         BUILD --build-arg PKG=$PKG +build-rpm
     END
     BUILD +build-swix
-    FOR VERSION IN "4.26.3M" "4.27.0F"
+    FOR VERSION IN "4.28.2F"
         BUILD --build-arg CEOS_VERSION=$VERSION +test
     END
     BUILD +docs
@@ -67,20 +67,23 @@ sdist:
     SAVE ARTIFACT dist/*.tar.gz AS LOCAL dist/sdist/
 
 build-rpm:
-    FROM fedora:31
+    FROM fedora:34
 
     WORKDIR "/root"
 
     RUN dnf update -y
     RUN dnf install -y \
             # python build deps
-            python3 python3-devel python3-pip \
-            python2 python2-devel python2-pip python2-wheel \
+            python3 python3-devel \
+            python2 python2-devel \
             pyproject-rpm-macros \
             # rpm build tools
             rpm-build rpm-devel rpmlint rpmdevtools \
             # for switools
             gcc-c++ swig openssl-devel zip
+
+    RUN python2 -m ensurepip
+    RUN python3 -m ensurepip
 
     RUN python3 -m pip install \
             --disable-pip-version-check \
@@ -89,7 +92,7 @@ build-rpm:
             --user \
             pipenv
     COPY Pipfile Pipfile.lock .
-    RUN python3 -m pipenv lock --dev-only -r > requirements.txt
+    RUN python3 -m pipenv requirements --dev-only > requirements.txt
     RUN python3 -m pip install \
             --disable-pip-version-check \
             --progress-bar off \
