@@ -40,7 +40,7 @@ deps:
 safety:
     BUILD +deps
     FROM +deps
-    RUN python -m pipenv run safety check --full-report
+    RUN python -m pipenv check --full-report
 
 src:
     ARG --required PKG
