@@ -89,7 +89,7 @@ build-rpm:
             --user \
             pipenv
     COPY Pipfile Pipfile.lock .
-    RUN python3 -m pipenv lock --dev-only -r > requirements.txt
+    RUN python3 -m pipenv requirements --dev-only > requirements.txt
     RUN python3 -m pip install \
             --disable-pip-version-check \
             --progress-bar off \
