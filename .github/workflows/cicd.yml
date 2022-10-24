@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: earthly
         uses: ./.github/actions/earthly
         with:
@@ -26,7 +26,7 @@ jobs:
           - "prefix_list_agent_cli"
     steps:
       - name: checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: earthly
         uses: ./.github/actions/earthly
         with:
@@ -45,7 +45,7 @@ jobs:
           - "prefix_list_agent_cli"
     steps:
       - name: checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: earthly
         uses: ./.github/actions/earthly
         with:
@@ -58,7 +58,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
       - name: earthly
@@ -79,7 +79,7 @@ jobs:
           - "4.28.2F"
     steps:
       - name: checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: download built package
         uses: actions/download-artifact@v2
         with:
@@ -107,7 +107,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: earthly
         uses: ./.github/actions/earthly
         with:
@@ -143,7 +143,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: download built docs artifact
         uses: actions/download-artifact@v2
         with:
@@ -160,7 +160,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: download built package
         uses: actions/download-artifact@v2
         with:
