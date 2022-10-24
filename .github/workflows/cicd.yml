@@ -81,7 +81,7 @@ jobs:
       - name: checkout
         uses: actions/checkout@v3
       - name: download built package
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: build-swix
       - name: earthly
@@ -145,7 +145,7 @@ jobs:
       - name: checkout
         uses: actions/checkout@v3
       - name: download built docs artifact
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: docs
           path: dist/book
@@ -162,7 +162,7 @@ jobs:
       - name: checkout
         uses: actions/checkout@v3
       - name: download built package
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: build-swix
       - name: publish release
