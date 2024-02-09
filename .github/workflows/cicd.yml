@@ -2,6 +2,8 @@ name: "CI/CD"
 on:
   - push
   - pull_request
+permissions:
+  packages: write
 jobs:
   safety:
     runs-on: ubuntu-latest
