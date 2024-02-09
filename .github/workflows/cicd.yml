@@ -3,6 +3,7 @@ on:
   - push
   - pull_request
 permissions:
+  contents: write
   packages: write
 jobs:
   safety:
