@@ -17,6 +17,8 @@ all:
     BUILD +docs
 
 deps:
+	ENV PATH="$PATH:/root/.local/bin"
+
     RUN apt update -qq && \
         apt upgrade -qqy && \
         apt install -qqy git g++ swig libssl-dev zip
