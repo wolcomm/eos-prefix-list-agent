@@ -11,7 +11,7 @@ all:
         BUILD --build-arg PKG=$PKG +build-rpm
     END
     BUILD +build-swix
-    FOR VERSION IN "4.28.2F"
+    FOR VERSION IN "4.28.2F" "4.30.2F" "4.31.2F"
         BUILD --build-arg CEOS_VERSION=$VERSION +test
     END
     BUILD +docs

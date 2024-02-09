@@ -79,6 +79,8 @@ jobs:
       matrix:
         ceos_version:
           - "4.28.2F"
+          - "4.30.2F"
+          - "4.31.2F"
     steps:
       - name: checkout
         uses: actions/checkout@v4
