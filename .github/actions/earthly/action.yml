@@ -23,7 +23,7 @@ inputs:
   earthly_version:
     description: "earthly release version"
     required: false
-    default: "0.6.2"
+    default: "0.7.21"
   ghcr_token:
     description: "ghcr authentication token"
     required: true
