@@ -41,10 +41,12 @@ This package provides the CLI extension implementation.
 
 %install
 %py2_install_wheel eos_prefix_list_agent_cli-%{version}-py2-none-any.whl
-mkdir -p %{buildroot}/%{_datadir}/CliExtension
+mkdir -p %{buildroot}/%{_datadir}/CliExtension/CliPlugin
 mkdir -p %{buildroot}/%{python2_sitelib}/CliPlugin
 ln -s %{python2_sitelib}/prefix_list_agent_cli/extension.yaml %{buildroot}%{_datadir}/CliExtension/PrefixListAgent.yaml
+# link the extension to the locations expected before and after 4.30.2F
 ln -s %{python2_sitelib}/prefix_list_agent_cli/extension.py %{buildroot}%{python2_sitelib}/CliPlugin/PrefixListAgent.py
+ln -s %{python2_sitelib}/prefix_list_agent_cli/extension.py %{buildroot}%{_datadir}/CliExtension/CliPlugin/PrefixListAgentCli.py
 
 
 %check
@@ -57,6 +59,7 @@ ln -s %{python2_sitelib}/prefix_list_agent_cli/extension.py %{buildroot}%{python
 %{python2_sitelib}/prefix_list_agent_cli/
 %{python2_sitelib}/CliPlugin/PrefixListAgent.py
 %{_datadir}/CliExtension/PrefixListAgent.yaml
+%{_datadir}/CliExtension/CliPlugin/PrefixListAgentCli.py
 
 
 %changelog
