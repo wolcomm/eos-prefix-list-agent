@@ -105,8 +105,11 @@ jobs:
         env:
           CEOS_VERSION: ${{ matrix.ceos_version }}
         with:
+          name: ${{ matrix.ceos_version }}
           files: coverage.xml
           env_vars: CEOS_VERSION
+          fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
   build-docs:
     needs: [safety]
     runs-on: ubuntu-latest
