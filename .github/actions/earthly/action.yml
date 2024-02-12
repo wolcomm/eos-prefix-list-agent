@@ -23,7 +23,7 @@ inputs:
   earthly_version:
     description: "earthly release version"
     required: false
-    default: "0.6.2"
+    default: "0.7.21"
   ghcr_token:
     description: "ghcr authentication token"
     required: true
@@ -57,13 +57,13 @@ runs:
       shell: bash
       run: /usr/local/bin/earthly bootstrap
     - name: login to azure acr
-      uses: docker/login-action@v1
+      uses: docker/login-action@v2
       with:
         registry: ${{ inputs.acr_uri }}
         username: ${{ inputs.acr_token_name }}
         password: ${{ inputs.acr_token }}
     - name: login to ghcr
-      uses: docker/login-action@v1
+      uses: docker/login-action@v2
       with:
         registry: ghcr.io
         username: ${{ github.actor }}
@@ -81,7 +81,7 @@ runs:
         FORCE_COLOR: "1"
     - name: upload artifact
       if: inputs.artifact_path != ''
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: ${{ inputs.artifact_name || inputs.target }}
         path: ${{ inputs.artifact_path }}

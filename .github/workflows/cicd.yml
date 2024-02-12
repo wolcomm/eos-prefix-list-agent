@@ -2,12 +2,15 @@ name: "CI/CD"
 on:
   - push
   - pull_request
+permissions:
+  contents: write
+  packages: write
 jobs:
   safety:
     runs-on: ubuntu-latest
     steps:
       - name: checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: earthly
         uses: ./.github/actions/earthly
         with:
@@ -26,7 +29,7 @@ jobs:
           - "prefix_list_agent_cli"
     steps:
       - name: checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: earthly
         uses: ./.github/actions/earthly
         with:
@@ -45,7 +48,7 @@ jobs:
           - "prefix_list_agent_cli"
     steps:
       - name: checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: earthly
         uses: ./.github/actions/earthly
         with:
@@ -58,7 +61,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: earthly
@@ -76,13 +79,14 @@ jobs:
       fail-fast: false
       matrix:
         ceos_version:
-          - "4.26.3M"
-          - "4.27.0F"
+          - "4.28.2F"
+          - "4.30.2F"
+          - "4.31.2F"
     steps:
       - name: checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: download built package
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: build-swix
       - name: earthly
@@ -97,7 +101,7 @@ jobs:
           ghcr_token: ${{ secrets.GITHUB_TOKEN }}
           acr_token: ${{ secrets.AZURE_ACR_TOKEN }}
       - name: upload coverage report
-        uses: codecov/codecov-action@v2
+        uses: codecov/codecov-action@v3
         env:
           CEOS_VERSION: ${{ matrix.ceos_version }}
         with:
@@ -108,7 +112,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: earthly
         uses: ./.github/actions/earthly
         with:
@@ -144,9 +148,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: download built docs artifact
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: docs
           path: dist/book
@@ -161,9 +165,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: download built package
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: build-swix
       - name: publish release

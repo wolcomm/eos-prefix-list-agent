@@ -14,7 +14,6 @@ flake8-eradicate = "*"
 flake8-import-order = "*"
 pep8-naming = "*"
 radon = "*"
-safety = "*"
 mypy = "*"
 pytest = "*"
 pytest-cov = "*"
@@ -28,4 +27,4 @@ build = "*"
 switools = "*"
 
 [requires]
-python_version = "3.7"
+python_version = "3.9"

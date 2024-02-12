@@ -1,6 +1,6 @@
 VERSION 0.6
 
-FROM python:3.7-slim
+FROM python:3.9-slim
 WORKDIR "/root/"
 
 all:
@@ -11,12 +11,14 @@ all:
         BUILD --build-arg PKG=$PKG +build-rpm
     END
     BUILD +build-swix
-    FOR VERSION IN "4.26.3M" "4.27.0F"
+    FOR VERSION IN "4.28.2F" "4.30.2F" "4.31.2F"
         BUILD --build-arg CEOS_VERSION=$VERSION +test
     END
     BUILD +docs
 
 deps:
+	ENV PATH="$PATH:/root/.local/bin"
+
     RUN apt update -qq && \
         apt upgrade -qqy && \
         apt install -qqy git g++ swig libssl-dev zip
@@ -40,7 +42,7 @@ deps:
 safety:
     BUILD +deps
     FROM +deps
-    RUN python -m pipenv run safety check --full-report
+    RUN python -m pipenv check --full-report
 
 src:
     ARG --required PKG
@@ -67,20 +69,23 @@ sdist:
     SAVE ARTIFACT dist/*.tar.gz AS LOCAL dist/sdist/
 
 build-rpm:
-    FROM fedora:31
+    FROM fedora:34
 
     WORKDIR "/root"
 
     RUN dnf update -y
     RUN dnf install -y \
             # python build deps
-            python3 python3-devel python3-pip \
-            python2 python2-devel python2-pip python2-wheel \
+            python3 python3-devel \
+            python2 python2-devel \
             pyproject-rpm-macros \
             # rpm build tools
             rpm-build rpm-devel rpmlint rpmdevtools \
             # for switools
             gcc-c++ swig openssl-devel zip
+
+    RUN python2 -m ensurepip
+    RUN python3 -m ensurepip
 
     RUN python3 -m pip install \
             --disable-pip-version-check \

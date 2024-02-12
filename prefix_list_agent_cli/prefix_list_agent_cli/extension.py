@@ -12,7 +12,7 @@
 """PrefixListAgent CLI plugin handlers."""
 
 import sys
-from typing import Any, Dict, Optional, Text
+from typing import Any, Dict, Optional, Text  # noqa: F401
 
 import CliExtension
 

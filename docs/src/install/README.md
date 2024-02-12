@@ -2,12 +2,19 @@
 
 ## EOS Compatibility
 
-Versions from `0.2.0` are compatible with EOS versions `4.26.0F` and above.
+The following table sets out the EOS versions compatible with each minor
+release, along with its current maintenance status:
 
-To run on an older EOS version (`4.22.0F` and above), select a release from
-`0.1.x`.
+| Agent version | EOS versions            | Support            |
+|---------------|-------------------------|--------------------|
+| `0.1.x`       | `>= 4.22.0F, < 4.26.0F` | none               |
+| `0.2.x`       | `>= 4.26.0F, < 4.28.0F` | none               |
+| `1.0.x`       | `>= 4.26.0F, < 4.28.0F` | bug/security fixes |
+| `1.1.x`       | `>= 4.28.0F`            | active             |
 
-> Note: the remainder of this documentation is written for the current version.
+> Note: the remainder of this documentation is written for versions from
+> `0.2.0` onwards.
+>
 > Usage details for older versions can be found in the [README] of the GitHub
 > repository (at the appropriate tagged commit).
 

@@ -10,6 +10,4 @@ which solves several operational challenges.
 This has been used in production at [Workonline Communications (AS37271)][Workonline]
 since 2019.
 
-A brief [background](background.md) to the problems it addresses is provided.
-
 [Workonline]: https://workonline.africa
