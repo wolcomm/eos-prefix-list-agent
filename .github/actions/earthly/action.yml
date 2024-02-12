@@ -81,7 +81,7 @@ runs:
         FORCE_COLOR: "1"
     - name: upload artifact
       if: inputs.artifact_path != ''
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ inputs.artifact_name || inputs.target }}
         path: ${{ inputs.artifact_path }}
