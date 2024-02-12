@@ -101,7 +101,7 @@ jobs:
           ghcr_token: ${{ secrets.GITHUB_TOKEN }}
           acr_token: ${{ secrets.AZURE_ACR_TOKEN }}
       - name: upload coverage report
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         env:
           CEOS_VERSION: ${{ matrix.ceos_version }}
         with:
