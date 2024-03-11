@@ -174,7 +174,7 @@ jobs:
         with:
           name: build-swix
       - name: publish release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: "./*.swix"
           draft: true
